@@ -1,0 +1,20 @@
+{
+  "name": "exodo-urbano",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Êxodo Urbano — cozy game no cerrado (Phaser 3 + TypeScript)",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview --host",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "phaser": "3.90.0"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3",
+    "vite": "5.4.19"
+  }
+}

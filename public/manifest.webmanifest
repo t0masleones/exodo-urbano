@@ -1,0 +1,11 @@
+{
+  "name": "Êxodo Urbano",
+  "short_name": "Êxodo",
+  "description": "Uma vida nova no cerrado: horta, bichos e sossego.",
+  "start_url": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#2f4a2a",
+  "theme_color": "#2f4a2a",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }]
+}
