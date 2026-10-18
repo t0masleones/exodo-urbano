@@ -3,10 +3,10 @@ import type { ObjectKind, WorldObject } from '../state/types';
 import { mulberry32 } from '../util/random';
 
 export type Ground = 'grama' | 'trilha' | 'agua' | 'terra';
-export type Interact = 'dormir' | 'feira' | 'vender';
+export type Interact = 'dormir' | 'feira' | 'vender' | 'cozinhar';
 
 export interface Structure {
-  kind: 'casa' | 'van' | 'caixa';
+  kind: 'casa' | 'van' | 'caixa' | 'fogao';
   /** Pegada bloqueada no grid, em tiles. */
   x: number;
   y: number;
@@ -26,7 +26,7 @@ export interface BaseMap {
   roof: { x: number; y: number };
 }
 
-const HP: Record<ObjectKind, number> = { eucalipto: 4, pequizeiro: 999, toco: 2, pedra: 2, cupinzeiro: 3, pequi: 1 };
+const HP: Record<ObjectKind, number> = { eucalipto: 4, pequizeiro: 999, toco: 2, pedra: 2, cupinzeiro: 3, pequi: 1, frutifera: 999 };
 export const objectHp = (k: ObjectKind) => HP[k];
 
 /**
@@ -60,6 +60,8 @@ export function generateBaseMap(seed = 2026): BaseMap {
   const structures: Structure[] = [
     { kind: 'casa', x: 6, y: 4, w: 4, h: 3, interact: 'dormir' },
     { kind: 'caixa', x: 11, y: 6, w: 1, h: 1, interact: 'vender' },
+    // fogão a lenha no quintal, ao lado da casa
+    { kind: 'fogao', x: 4, y: 6, w: 1, h: 1, interact: 'cozinhar' },
     { kind: 'van', x: 18, y: 26, w: 2, h: 1, interact: 'feira' },
   ];
 

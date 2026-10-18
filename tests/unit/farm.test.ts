@@ -96,9 +96,9 @@ describe('economia e carinho', () => {
   it('recusa compras inválidas vindas da interface', () => {
     const { farm, state } = setup();
     const money = state.money;
-    for (const qty of [0, -5, 1.5, Number.NaN, 1_000_000]) expect(farm.buy('milho', qty)).toBe(false);
-    expect(farm.buy('constructor', 1)).toBe(false);
-    expect(farm.buy('__proto__', 1)).toBe(false);
+    for (const qty of [0, -5, 1.5, Number.NaN, 1_000_000]) expect(farm.buy('semente:milho', qty)).toBe(false);
+    expect(farm.buy('semente:constructor', 1)).toBe(false);
+    expect(farm.buy('muda:__proto__', 1)).toBe(false);
     expect(state.money).toBe(money);
   });
 

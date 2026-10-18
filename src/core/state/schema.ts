@@ -1,6 +1,7 @@
 import { DAY_END, DAY_START, MAP_H, MAP_W, TILE } from '../config';
 import { HUMAN_IDS, PET_IDS, type HumanId, type PetId } from '../data/characters';
 import { CROP_BY_ID } from '../data/crops';
+import { TREE_BY_ID } from '../data/trees';
 import { isKnownItem } from '../data/items';
 import { migrate } from './migrations';
 import { OBJECT_KINDS, SAVE_SCHEMA, type GameState, type ObjectKind, type TileState, type WorldObject } from './types';
@@ -123,7 +124,15 @@ function build(s: Json): GameState {
     check(OBJECT_KINDS.includes(o.kind as ObjectKind), `objects[${i}].kind`);
     check(isInt(o.x, 0, MAP_W - 1) && isInt(o.y, 0, MAP_H - 1) && isInt(o.hp, 0, 999), `objects[${i}].pos`);
     seen.add(o.id);
-    return { id: o.id, kind: o.kind as ObjectKind, x: o.x, y: o.y, hp: o.hp };
+    const obj: WorldObject = { id: o.id, kind: o.kind as ObjectKind, x: o.x, y: o.y, hp: o.hp };
+    if (o.kind === 'frutifera') {
+      const t = o.tree;
+      check(isObj(t) && isStr(t.id, 32) && own(TREE_BY_ID as Json, t.id) && isInt(t.days, 0, 1e6) && typeof t.ready === 'boolean', `objects[${i}].tree`);
+      obj.tree = { id: t.id, days: t.days, ready: t.ready };
+    } else {
+      check(o.tree === undefined, `objects[${i}].tree`);
+    }
+    return obj;
   });
   const maxId = objects.reduce((mx, o) => Math.max(mx, o.id), 0);
   check(isInt(s.nextObjectId, maxId + 1, 1e9), 'nextObjectId');
@@ -139,7 +148,7 @@ function build(s: Json): GameState {
 
   const st = s.stats;
   check(isObj(st), 'stats');
-  for (const k of ['colheitas', 'plantios', 'madeira', 'pedras'] as const) check(isInt(st[k], 0, 1e6), `stats.${k}`);
+  for (const k of ['colheitas', 'plantios', 'madeira', 'pedras', 'pratos'] as const) check(isInt(st[k], 0, 1e6), `stats.${k}`);
   check(Array.isArray(st.carinhos) && st.carinhos.length <= PET_IDS.length && st.carinhos.every((p) => PET_IDS.includes(p as PetId)), 'stats.carinhos');
 
   return {
@@ -162,7 +171,7 @@ function build(s: Json): GameState {
     affection,
     stats: {
       colheitas: st.colheitas as number, plantios: st.plantios as number,
-      madeira: st.madeira as number, pedras: st.pedras as number,
+      madeira: st.madeira as number, pedras: st.pedras as number, pratos: st.pratos as number,
       carinhos: [...(st.carinhos as PetId[])],
     },
   };

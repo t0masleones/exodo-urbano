@@ -4,7 +4,7 @@ import type { SlotKey } from '../core/systems/farm';
 import type { AccountSnapshot } from '../services/account/types';
 import type { Ambient, HudState } from '../ui/hudState';
 
-export type GameModal = 'sleep' | 'shop' | 'sell';
+export type GameModal = 'sleep' | 'shop' | 'sell' | 'cook';
 
 /**
  * Todos os eventos que cruzam camadas (jogo ⇄ interface ⇄ serviços).
@@ -24,6 +24,8 @@ export type AppEvents = {
   'ui:modal': [boolean];
   'ui:buy': [string, number];
   'ui:sell': [string, number];
+  'ui:cook': [string];
+  'ui:volume': [number];
   // ciclo de vida do app
   'app:pause': [];
   'app:resume': [];

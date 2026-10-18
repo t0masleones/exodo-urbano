@@ -1,8 +1,10 @@
 import Phaser from 'phaser';
 import { DAY_END, GAME_MINUTES_PER_SECOND, MAP_H, MAP_W, TILE } from '../../core/config';
-import { CROPS, CROP_BY_ID, cropDef, cropStage, cropTotalDays } from '../../core/data/crops';
+import { CROPS, cropDef, cropStage, cropTotalDays } from '../../core/data/crops';
 import { HUMANS, HUMAN_IDS, PETS, PET_IDS, type HumanId } from '../../core/data/characters';
-import { itemDef, seedKey } from '../../core/data/items';
+import { itemDef, saplingKey, seedKey } from '../../core/data/items';
+import { RECIPES } from '../../core/data/recipes';
+import { TREES, treeDef, treeStage } from '../../core/data/trees';
 import type { GameState } from '../../core/state/types';
 import { buildDiary, type DiaryEntry } from '../../core/systems/diary';
 import { Farm, TOOLS, type SlotKey } from '../../core/systems/farm';
@@ -207,8 +209,15 @@ export class FarmScene extends Phaser.Scene {
     const alive = new Set(this.state.objects.map((o) => o.id));
     for (const [id, img] of this.objSprites) if (!alive.has(id)) { img.destroy(); this.objSprites.delete(id); }
     for (const o of this.state.objects) {
-      if (this.objSprites.has(o.id)) continue;
-      const img = this.add.image(o.x * TILE + 16, (o.y + 1) * TILE, o.kind).setOrigin(0.5, 1);
+      const [texture, frame] = o.kind === 'frutifera' && o.tree
+        ? [`tree-${o.tree.id}`, treeStage(treeDef(o.tree.id), o.tree.days, o.tree.ready)]
+        : [o.kind, undefined];
+      const existing = this.objSprites.get(o.id);
+      if (existing) {
+        if (frame !== undefined && existing.frame.name !== String(frame)) existing.setFrame(frame);
+        continue;
+      }
+      const img = this.add.image(o.x * TILE + 16, (o.y + 1) * TILE, texture, frame).setOrigin(0.5, 1);
       img.setDepth(o.kind === 'pequi' ? o.y * TILE + 4 : (o.y + 1) * TILE);
       img.setInteractive({ useHandCursor: true }).setData('tile', { x: o.x, y: o.y });
       this.objSprites.set(o.id, img);
@@ -278,6 +287,10 @@ export class FarmScene extends Phaser.Scene {
   }
 
   private doAct(t: TilePos): boolean {
+    if (this.selected.startsWith('muda:') && this.occupied(t) && this.farm.act(this.selected, t.x, t.y, true)) {
+      this.ctx.bus.emit('toast', 'Tem alguém em cima desse lugar. Escolha outro cantinho para a muda.');
+      return true;
+    }
     const res = this.farm.act(this.selected, t.x, t.y);
     if (!res) return false;
     if (res.interact) {
@@ -296,8 +309,14 @@ export class FarmScene extends Phaser.Scene {
     return true;
   }
 
+  /** Tile ocupado por uma pessoa ou bicho (para não plantar árvore em cima de ninguém). */
+  private occupied(t: TilePos) {
+    const all = [this.humans.carol, this.humans.tomas, ...this.pets];
+    return all.some((w) => w.tile.x === t.x && w.tile.y === t.y);
+  }
+
   private interact(kind: Interact) {
-    this.ctx.bus.emit('open', kind === 'dormir' ? 'sleep' : kind === 'feira' ? 'shop' : 'sell');
+    this.ctx.bus.emit('open', kind === 'dormir' ? 'sleep' : kind === 'feira' ? 'shop' : kind === 'cozinhar' ? 'cook' : 'sell');
   }
 
   private approachPet(pet: Pet) {
@@ -400,9 +419,14 @@ export class FarmScene extends Phaser.Scene {
       bus.on('ui:switch', () => this.switchCharacter()),
       bus.on('ui:modal', (open) => (this.paused = open)),
       bus.on('ui:buy', (id, qty) => {
-        const crop = CROP_BY_ID[id];
-        if (crop && this.farm.buy(id, qty)) bus.emit('toast', `Comprou ${qty}× sementes de ${crop.name}.`);
+        if (this.farm.buy(id, qty)) bus.emit('toast', `Comprou ${qty}× ${itemDef(id).name.toLowerCase()}.`);
         else bus.emit('toast', 'Dinheiro não dá. Que tal vender umas coisas na caixa?');
+        this.emitHud();
+      }),
+      bus.on('ui:cook', (id) => {
+        const res = this.farm.cook(id);
+        if (res?.message) bus.emit('toast', res.message);
+        if (res?.fx) this.floatText(this.player.x, this.player.y - 40, res.fx);
         this.emitHud();
       }),
       bus.on('ui:sell', (id, qty) => {
@@ -418,14 +442,15 @@ export class FarmScene extends Phaser.Scene {
   }
 
   private slots() {
-    const tools = TOOLS.map((t) => ({ key: `tool:${t.tool}`, icon: t.icon, label: t.name, count: undefined as number | undefined }));
-    const seeds = CROPS.filter((c) => (this.state.inventory[seedKey(c.id)] ?? 0) > 0).map((c) => ({
-      key: `seed:${c.id}`,
-      icon: c.emoji,
-      label: `Sementes de ${c.name}`,
-      count: this.state.inventory[seedKey(c.id)],
+    const inv = this.state.inventory;
+    const tools = TOOLS.map((t) => ({ key: `tool:${t.tool}`, label: t.name, count: undefined as number | undefined }));
+    const seeds = CROPS.filter((c) => (inv[seedKey(c.id)] ?? 0) > 0).map((c) => ({
+      key: `seed:${c.id}`, label: `Sementes de ${c.name}`, count: inv[seedKey(c.id)],
     }));
-    return [...tools, ...seeds];
+    const saplings = TREES.filter((t) => (inv[saplingKey(t.id)] ?? 0) > 0).map((t) => ({
+      key: saplingKey(t.id), label: `Muda de ${t.name.toLowerCase()}`, count: inv[saplingKey(t.id)],
+    }));
+    return [...tools, ...seeds, ...saplings];
   }
 
   private emitHud() {
@@ -435,6 +460,7 @@ export class FarmScene extends Phaser.Scene {
     const season = this.farm.season;
     const hud: HudState = {
       day: st.day,
+      season,
       seasonLabel: seasonLabel(season),
       dayInSeason: dayInSeason(st.day),
       clock: formatClock(st.minutes),
@@ -445,12 +471,26 @@ export class FarmScene extends Phaser.Scene {
       slots,
       selected: this.selected,
       inventory: Object.entries(st.inventory)
-        .filter(([id]) => !id.startsWith('semente:'))
-        .map(([id, count]) => ({ ...itemDef(id), count })),
-      shop: CROPS.map((c) => ({
-        id: c.id, name: c.name, emoji: c.emoji, price: c.seedPrice,
-        inSeason: c.seasons.includes(season), days: cropTotalDays(c), regrow: c.regrowDays,
-      })),
+        .filter(([id]) => !id.startsWith('semente:') && !id.startsWith('muda:'))
+        .map(([id, count]) => ({ id, name: itemDef(id).name, sell: itemDef(id).sell, count })),
+      shop: [
+        ...CROPS.map((c) => ({
+          key: seedKey(c.id), kind: 'semente' as const, name: c.name, price: c.seedPrice, inSeason: c.seasons.includes(season),
+          info: `${cropTotalDays(c)} dias${c.regrowDays ? ` · rebrota a cada ${c.regrowDays}` : ''}`,
+        })),
+        ...TREES.map((t) => ({
+          key: saplingKey(t.id), kind: 'muda' as const, name: t.name, price: t.saplingPrice, inSeason: t.seasons.includes(season),
+          info: `adulta em ${t.matureDays} dias · ${t.fruitName.toLowerCase()} a cada ${t.cycleDays} · sem rega`,
+        })),
+      ],
+      recipes: RECIPES.map((r) => {
+        const needs: [string, number][] = [...Object.entries(r.ingredients), ...(r.wood ? [['madeira', r.wood] as [string, number]] : [])];
+        return {
+          id: r.id, name: r.name, sell: r.sell,
+          ingredients: needs.map(([id, need]) => ({ id, name: itemDef(id).name, need, have: st.inventory[id] ?? 0 })),
+          canCook: this.farm.missingFor(r).length === 0,
+        };
+      }),
       pets: PET_IDS.map((id) => ({
         id, name: PETS[id].name, breed: PETS[id].breed,
         hearts: st.affection[id].points, pettedToday: st.affection[id].lastDay === st.day,
@@ -461,7 +501,12 @@ export class FarmScene extends Phaser.Scene {
   }
 
   private emitAmbient() {
-    this.ctx.bus.emit('ambient', { ...ambientLight(this.state.minutes), rain: this.state.weather === 'chuva' });
+    this.ctx.bus.emit('ambient', {
+      ...ambientLight(this.state.minutes),
+      rain: this.state.weather === 'chuva',
+      hour: this.state.minutes / 60,
+      season: this.farm.season,
+    });
   }
 
   // ------------------------------------------------------------ efeitos

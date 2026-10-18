@@ -255,3 +255,23 @@ iframe.legal { flex: 1; width: 100%; border: 2px solid #d6c39c; border-radius: 8
   .slot .icon { font-size: 22px; line-height: 40px; }
   .hearts { font-size: 9px; }
 }
+
+/* ---------- ícones próprios em pixel art (src/ui/icons.ts) ---------- */
+svg.px { display: inline-block; width: 1em; height: 1em; vertical-align: -0.15em; image-rendering: pixelated; }
+.btn svg.px { width: 22px; height: 22px; vertical-align: middle; }
+.slot .icon { display: grid; place-items: center; height: 100%; line-height: normal; }
+.slot .icon svg.px { width: 32px; height: 32px; }
+.slot .seed svg.px { width: 14px; height: 14px; }
+.list .em svg.px { width: 28px; height: 28px; }
+.clock .i svg.px { width: 16px; height: 16px; margin: 0 3px 0 0; }
+.clock [data-id='weather'] svg.px { margin: 0 0 0 4px; }
+.h-icon svg.px { width: 24px; height: 24px; margin-right: 8px; vertical-align: -4px; }
+.hearts svg.px { width: 12px; height: 12px; margin: 0 -1px; }
+.ingredients { display: flex; flex-wrap: wrap; gap: 2px 10px; }
+.ingredients svg.px { width: 14px; height: 14px; }
+.ingredients .falta { color: var(--danger); font-weight: 700; }
+@media (max-width: 600px) {
+  .slot .icon svg.px { width: 28px; height: 28px; }
+  .btn svg.px { width: 18px; height: 18px; }
+  .hearts svg.px { width: 9px; height: 9px; }
+}

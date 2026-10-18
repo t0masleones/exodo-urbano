@@ -19,6 +19,8 @@ Cozy game 2D para **navegador, Android e iOS**. Carol e Tomás largaram o mercad
   - App Check;
   - validação defensiva de saves;
   - dependências com versões exatas, verificadas e com licenças auditadas.
+- **Conteúdo:** horta com 12 culturas, pomar com 5 árvores frutíferas, fogão a lenha com 8 receitas, pets com IA, estações do cerrado.
+- **Arte e som próprios:** ícones em pixel art desenhados em código e som ambiente do cerrado (cigarras, seriema, grilos, chuva) sintetizado em tempo real, sem arquivos de terceiros.
 - **Livre para todos e saudável:** autoclassificação **Livre** pelo Guia de Classificação Indicativa do MJSP (5ª ed.). Sem chat, compras, anúncios ou loot boxes. Lembrete de pausa ligado por padrão, como pede o ECA Digital.
 - **Testes, todos no CI:**
   - unidade: regras, saves, sync, segurança, bem-estar;

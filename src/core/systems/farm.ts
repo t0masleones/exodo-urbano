@@ -1,7 +1,9 @@
 import { DAY_START, MAP_H, MAP_W } from '../config';
 import { CROP_BY_ID, cropDef, cropStage, cropTotalDays, type CropDef, type Season } from '../data/crops';
 import type { PetId } from '../data/characters';
-import { itemDef, seedKey } from '../data/items';
+import { dishKey, itemDef, saplingKey, seedKey, splitItem } from '../data/items';
+import { RECIPE_BY_ID, type Recipe } from '../data/recipes';
+import { TREE_BY_ID, treeDef } from '../data/trees';
 import { emptyStats, type DayStats, type GameState, type ObjectKind, type TileState, type WorldObject } from '../state/types';
 import { objectHp, type BaseMap, type Interact, type Structure } from '../world/mapgen';
 import { pickWeighted, randInt } from '../util/random';
@@ -116,6 +118,8 @@ export class Farm {
       return null;
     }
 
+    if (kind === 'muda') return this.plantTree(id, x, y, t, dry);
+
     const def = CROP_BY_ID[id];
     if (kind !== 'seed' || !def) return null;
     if (t?.plowed && !t.crop) {
@@ -129,6 +133,18 @@ export class Farm {
     }
     if (!t?.plowed && this.canPlow(x, y)) return dry ? {} : { message: 'Prepare a terra com a enxada primeiro 🪏' };
     return null;
+  }
+
+  /** Muda de árvore frutífera: vai na grama ou na terra, fora dos canteiros. */
+  private plantTree(id: string, x: number, y: number, t: TileState | undefined, dry: boolean): ActResult | null {
+    const def = TREE_BY_ID[id];
+    if (!def || t?.plowed || !this.canPlow(x, y)) return null;
+    if (dry) return {};
+    if ((this.state.inventory[saplingKey(id)] ?? 0) <= 0) return { message: `Acabaram as mudas de ${def.name.toLowerCase()}.` };
+    this.add(saplingKey(id), -1);
+    this.state.objects.push({ id: this.state.nextObjectId++, kind: 'frutifera', x, y, hp: objectHp('frutifera'), tree: { id, days: 0, ready: false } });
+    this.state.stats.plantios++;
+    return { objectsChanged: true, fx: '🌳', message: `Muda de ${def.name.toLowerCase()} plantada! Ela cresce sozinha, sem rega, e dá fruta em ${def.matureDays} dias.` };
   }
 
   private harvest(t: TileState, def: CropDef): ActResult {
@@ -148,6 +164,21 @@ export class Farm {
       this.add('pequi', 1);
       return { objectsChanged: true, fx: '🟡', message: 'Pequi! Roer com cuidado, que tem espinho 😄' };
     }
+    if (o.kind === 'frutifera' && o.tree) {
+      const def = treeDef(o.tree.id);
+      const name = def.name.toLowerCase();
+      if (o.tree.ready) {
+        const n = randInt(def.yield[0], def.yield[1], this.random);
+        this.add(def.id, n);
+        o.tree.ready = false;
+        this.state.stats.colheitas += n;
+        return { objectsChanged: true, fx: def.emoji, message: `Colheu ${n}× ${def.fruitName}!` };
+      }
+      if (tool === 'machado') return { message: `Ninguém corta a ${name}: ela ainda vai dar muita ${def.fruitName.toLowerCase()}.` };
+      if (o.tree.days < def.matureDays) return { message: `A ${name} ainda é uma muda. Fica adulta em ${def.matureDays - o.tree.days} dia(s).` };
+      if (!def.seasons.includes(this.season)) return { message: `A ${name} descansa nesta época e volta a dar fruta nas chuvas.` };
+      return { message: `Sem frutas maduras agora. A ${name} capricha na próxima safra.` };
+    }
     if (o.kind === 'pequizeiro') {
       if (tool === 'machado') return { message: 'Pequizeiro é nativo e protegido. Na seca ele dá pequi!' };
       return { message: this.season === 'seca' ? 'Os pequis caem sozinhos quando ficam maduros.' : 'O pequi chega na seca. Por enquanto, sombra fresca.' };
@@ -159,7 +190,8 @@ export class Farm {
     if (o.hp > 0) return { hitObject: o.id, fx: needs === 'machado' ? '🪓' : '⛏️' };
 
     this.removeObject(o.id);
-    const drops: Record<Exclude<ObjectKind, 'pequi' | 'pequizeiro'>, [string, number]> = {
+    if (o.kind === 'frutifera') return { message: 'Essa árvore fica.' };
+    const drops: Record<Exclude<ObjectKind, 'pequi' | 'pequizeiro' | 'frutifera'>, [string, number]> = {
       eucalipto: ['madeira', 3],
       toco: ['madeira', 1],
       pedra: ['pedra', 2],
@@ -191,14 +223,36 @@ export class Farm {
     return true;
   }
 
-  buy(cropId: string, qty: number): boolean {
-    const crop = CROP_BY_ID[cropId];
-    if (!crop || !Number.isInteger(qty) || qty < 1 || qty > MAX_BUY) return false;
-    const cost = crop.seedPrice * qty;
+  /** Compra na van da feira: "semente:milho" ou "muda:manga". */
+  buy(key: string, qty: number): boolean {
+    if (!Number.isInteger(qty) || qty < 1 || qty > MAX_BUY) return false;
+    const [kind, id] = splitItem(key);
+    const price = kind === 'semente' ? CROP_BY_ID[id]?.seedPrice : kind === 'muda' ? TREE_BY_ID[id]?.saplingPrice : undefined;
+    if (price === undefined) return false;
+    const cost = price * qty;
     if (this.state.money < cost) return false;
     this.state.money -= cost;
-    this.add(seedKey(cropId), qty);
+    this.add(kind === 'semente' ? seedKey(id) : saplingKey(id), qty);
     return true;
+  }
+
+  /** O que falta para fazer a receita (vazio = dá para cozinhar). */
+  missingFor(r: Recipe): { id: string; need: number; have: number }[] {
+    const inv = this.state.inventory;
+    const needs: [string, number][] = [...Object.entries(r.ingredients), ...(r.wood ? [['madeira', r.wood] as [string, number]] : [])];
+    return needs.map(([id, need]) => ({ id, need, have: inv[id] ?? 0 })).filter((x) => x.have < x.need);
+  }
+
+  /** Fogão a lenha: troca ingredientes + lenha por um prato que vale mais. */
+  cook(recipeId: string): ActResult | null {
+    const r = RECIPE_BY_ID[recipeId];
+    if (!r) return null;
+    if (this.missingFor(r).length) return { message: `Faltam ingredientes ou lenha para ${r.name.toLowerCase()}.` };
+    for (const [id, n] of Object.entries(r.ingredients)) this.add(id, -n);
+    if (r.wood) this.add('madeira', -r.wood);
+    this.add(dishKey(r.id), 1);
+    this.state.stats.pratos++;
+    return { fx: r.emoji, message: `${r.name} pronto! O cheiro tomou conta da varanda.` };
   }
 
   sell(itemId: string, qty: number) {
@@ -236,6 +290,21 @@ export class Farm {
         ? 'As chuvas chegaram! A terra vermelha cheira a molhado.'
         : 'Começou a seca. Os ipês vão florir e o céu fica alaranjado no fim da tarde.');
     }
+
+    // pomar: cresce sozinho e dá fruta a cada ciclo, na época certa
+    let fruited = 0;
+    for (const o of st.objects) {
+      if (o.kind !== 'frutifera' || !o.tree) continue;
+      const def = treeDef(o.tree.id);
+      o.tree.days++;
+      if (o.tree.days === def.matureDays) events.push(`A ${def.name.toLowerCase()} já está adulta!`);
+      const sinceMature = o.tree.days - def.matureDays;
+      if (!o.tree.ready && sinceMature >= 0 && sinceMature % def.cycleDays === 0 && def.seasons.includes(season)) {
+        o.tree.ready = true;
+        fruited++;
+      }
+    }
+    if (fruited) events.push('Tem fruta madura no pomar!');
 
     st.weather = r() < (season === 'chuvas' ? 0.55 : 0.05) ? 'chuva' : 'sol';
     if (st.weather === 'chuva') for (const t of Object.values(st.tiles)) if (t.plowed) t.watered = true;

@@ -43,10 +43,27 @@ Terra → **arar** (enxada) → **plantar** → **regar** → semente → broto 
 Carinho: 1 coração por dia por pet, até 10. Quem você não controla entre Carol e Tomás vira NPC e conversa quando você toca nele.
 
 ## Próximos passos sugeridos
-1. Sons ambientes (cigarra, seriema, chuva) e trilha de viola lo-fi.
-2. Árvores frutíferas plantáveis (manga, banana, acerola, mamão).
+1. ~~Sons ambientes (cigarra, seriema, chuva)~~ ✔ feito; falta trilha de viola lo-fi.
+2. ~~Árvores frutíferas plantáveis~~ ✔ feito (pomar).
 3. Usos para madeira, pedra e argila: reformar varanda e cerca, construir galinheiro e compostagem.
-4. Cozinha no fogão a lenha (pamonha, doce de leite, arroz com pequi).
+4. ~~Cozinha no fogão a lenha~~ ✔ feito; doce de leite depende de leite (curral futuro).
 5. Álbum de fauna do cerrado (lobo-guará, tucano, tamanduá, seriema).
 6. Brinquedos e petiscos para os pets; corações destravam interações.
 7. Arte LPC nos personagens e, depois, pets encomendados.
+
+## Pomar (árvores frutíferas)
+Mudas compradas na van da feira e plantadas na grama, fora dos canteiros. Árvore **não precisa de rega e nunca morre**: fica adulta em alguns dias e dá frutos a cada ciclo na época certa (fora dela, descansa). Colhe-se com qualquer ferramenta; árvore frutífera não se corta.
+
+| Árvore | Adulta em | Frutos a cada | Época |
+|---|---|---|---|
+| Mangueira | 12 dias | 4 dias | chuvas |
+| Bananeira | 8 | 5 | o ano todo |
+| Aceroleira | 8 | 2 | o ano todo |
+| Goiabeira | 10 | 3 | chuvas |
+| Mamoeiro | 9 | 3 | o ano todo |
+
+## Fogão a lenha
+No quintal, à esquerda da casa. Transforma ingredientes + lenha (madeira do eucalipto) em pratos típicos que valem mais na caixa de venda: pamonha, feijão-tropeiro, mandioca cozida, doce de abóbora, arroz com pequi, goiabada, geleia de manga e suco de acerola. Sem bebida alcoólica (classificação Livre). Configurado em `src/core/data/recipes.ts`.
+
+## Som ambiente
+Gerado em tempo real pelo próprio jogo (Web Audio, `src/audio/Ambience.ts`), sem arquivos de áudio: cigarras no calor do dia (mais fortes na seca), seriema de manhã cedo e no fim da tarde, grilos à noite e chuva. Volume em ⚙️ Opções (desligado, baixo, médio, alto); silencia quando o app vai para segundo plano.
