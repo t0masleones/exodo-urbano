@@ -1,0 +1,15 @@
+# Quebras de linha normalizadas (LF no repositório).
+* text=auto eol=lf
+
+# Scripts que precisam de LF mesmo vindo do Windows (CI Linux, Mac)
+gradlew text eol=lf
+*.sh text eol=lf
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# Binários
+*.png binary
+*.jpg binary
+*.jar binary
+*.keystore binary
+*.jks binary

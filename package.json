@@ -1,20 +1,56 @@
 {
   "name": "exodo-urbano",
   "private": true,
-  "version": "0.1.0",
-  "description": "Êxodo Urbano — cozy game no cerrado (Phaser 3 + TypeScript)",
+  "version": "0.2.0",
+  "description": "Êxodo Urbano: cozy game 2D no cerrado (web, Android e iOS)",
+  "license": "UNLICENSED",
+  "author": "t0masleones",
   "type": "module",
+  "engines": {
+    "node": ">=22.12"
+  },
   "scripts": {
     "dev": "vite --host",
-    "build": "tsc --noEmit && vite build",
+    "dev:emu": "vite --host --mode emulator",
+    "build": "npm run licenses && tsc --noEmit && vite build",
+    "build:emu": "npm run licenses && tsc --noEmit && vite build --mode emulator",
     "preview": "vite preview --host",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:rules": "firebase emulators:exec --only firestore --project demo-exodo \"vitest run --config vitest.rules.config.ts\"",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-exodo",
+    "licenses": "node scripts/third-party-licenses.mjs",
+    "release:check": "node scripts/release-check.mjs",
+    "cap:sync": "npm run build && cap sync",
+    "android": "npm run cap:sync && cap open android",
+    "ios": "npm run cap:sync && cap open ios"
   },
   "dependencies": {
-    "phaser": "3.90.0"
+    "@capacitor-firebase/authentication": "8.5.2",
+    "@capacitor/android": "8.5.2",
+    "@capacitor/app": "8.1.2",
+    "@capacitor/core": "8.5.2",
+    "@capacitor/filesystem": "8.1.4",
+    "@capacitor/ios": "8.5.2",
+    "@capacitor/preferences": "8.0.1",
+    "@capacitor/share": "8.0.3",
+    "firebase": "12.19.0",
+    "phaser": "4.2.1"
   },
   "devDependencies": {
-    "typescript": "5.6.3",
-    "vite": "5.4.19"
-  }
+    "@capacitor/cli": "8.5.2",
+    "@firebase/rules-unit-testing": "5.0.2",
+    "@types/node": "24.19.1",
+    "firebase-tools": "15.32.1",
+    "typescript": "7.0.2",
+    "vite": "8.3.2",
+    "vitest": "5.0.3"
+  },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "1.14.5"
+    }
+  },
+  "allowScripts": {}
 }

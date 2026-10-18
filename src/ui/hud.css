@@ -6,8 +6,16 @@
   --accent: #d98a3a;
   --leaf: #5f9a3a;
   --danger: #b5432e;
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* No Android o Capacitor injeta --safe-area-inset-*; no iOS e na web vale env(). */
+  --safe-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px));
+  --safe-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px));
+  --safe-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px));
+  --safe-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #rain.on { animation: none; }
+  .toast, #tint { transition: none; }
 }
 
 * { box-sizing: border-box; }
@@ -55,8 +63,8 @@ html, body {
 .top {
   position: absolute;
   top: calc(8px + var(--safe-top));
-  left: 8px;
-  right: 8px;
+  left: calc(8px + var(--safe-left));
+  right: calc(8px + var(--safe-right));
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
@@ -177,7 +185,53 @@ html, body {
 .list .btn { min-height: 32px; font-size: 13px; padding: 2px 8px; }
 .hearts { font-size: 11px; letter-spacing: -1px; white-space: nowrap; }
 
+/* ---------- telas de conta, privacidade e documentos ---------- */
+.sheet.wide { width: min(860px, calc(100vw - 24px)); height: calc(100dvh - 32px); display: flex; flex-direction: column; }
+.sheet.busy { opacity: 0.6; pointer-events: none; cursor: progress; }
+.sheet h3 { margin: 16px 0 6px; font-size: 16px; }
+.small { font-size: 13px; opacity: 0.8; line-height: 1.4; }
+.stack { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+.btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+.btn.ghost-border { background: transparent; }
+.link { font: inherit; background: none; border: 0; padding: 0; color: #2f6b2a; text-decoration: underline; cursor: pointer; }
+.alert { background: #fbe3dc; border: 2px solid var(--danger); border-radius: 8px; padding: 8px 10px; }
+.notice { background: #e4f1d8; border: 2px solid var(--leaf); border-radius: 8px; padding: 8px 10px; }
+.card { background: #efe0bf; border-radius: 10px; padding: 10px 12px; margin: 10px 0; line-height: 1.4; }
+.form { display: flex; flex-direction: column; gap: 10px; margin: 8px 0; }
+.form label { display: flex; flex-direction: column; gap: 4px; font-weight: 600; font-size: 14px; }
+.form label.check { flex-direction: row; align-items: flex-start; gap: 8px; font-weight: 400; }
+.form input:not([type='checkbox']), .form select {
+  font: inherit;
+  font-size: 16px; /* 16px evita o zoom automático do iOS ao focar */
+  padding: 9px 10px;
+  border: 2px solid #c9b48a;
+  border-radius: 8px;
+  background: #fffaf0;
+  color: var(--ink);
+}
+.form input:focus-visible, .form select:focus-visible, .btn:focus-visible, .slot:focus-visible, .link:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 12px 0; }
+.choice {
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 12px;
+  border-radius: 10px;
+  border: 3px solid var(--wood);
+  background: #fffaf0;
+  box-shadow: 0 3px 0 var(--wood-dark);
+  cursor: pointer;
+}
+.choice:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--wood-dark); }
+iframe.legal { flex: 1; width: 100%; border: 2px solid #d6c39c; border-radius: 8px; background: #fff; margin-top: 8px; }
+
 @media (max-width: 600px) {
+  .choices { grid-template-columns: 1fr; }
   .clock, .money { font-size: 12px; padding: 5px 8px; }
   .btn { min-height: 34px; min-width: 34px; font-size: 14px; padding: 2px 7px; }
   .buttons { margin-left: 0; width: 100%; justify-content: flex-start; }

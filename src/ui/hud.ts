@@ -1,188 +1,150 @@
-import { bus } from '../bus';
-import type { DiaryEntry } from '../systems/diary';
-import type { Ambient, HudState } from './hudState';
-import './hud.css';
+import type { GameModal } from '../app/events';
+import type { DiaryEntry } from '../core/systems/diary';
+import { html } from './dom';
+import type { HudState } from './hudState';
+import type { View } from './modal';
+import type { UiContext } from './context';
 
-/**
- * HUD em HTML/CSS por cima do canvas: fica nítido em qualquer tela, é fácil de
- * deixar responsivo e de trocar os emojis por ícones desenhados depois.
- */
-export function initHud(root: HTMLElement) {
-  root.innerHTML = `
-    <div class="top">
-      <div class="panel clock">
-        <span data-id="day"></span><span class="sep">·</span><span data-id="season"></span>
-        <span class="sep">·</span><span data-id="time"></span><span data-id="weather"></span>
-      </div>
-      <div class="panel money" data-id="money"></div>
-      <div class="buttons">
-        <button class="btn" data-act="switch" title="Trocar personagem (Tab)">🔄 <span data-id="partner"></span></button>
-        <button class="btn" data-act="bag" title="Mochila">🎒</button>
-        <button class="btn" data-act="family" title="Família">🐾</button>
-        <button class="btn" data-act="sleep" title="Dormir">🌙</button>
-        <button class="btn" data-act="fullscreen" title="Tela cheia">⛶</button>
-        <button class="btn" data-act="settings" title="Opções">⚙️</button>
-      </div>
-    </div>
-    <div class="toasts"></div>
-    <div class="hotbar panel"></div>
-    <div class="modal hidden"><div class="sheet"></div></div>
-  `;
-  const $ = <T extends HTMLElement>(sel: string) => root.querySelector(sel) as T;
-  const field = (id: string) => $(`[data-id="${id}"]`);
-  const hotbar = $('.hotbar');
-  const toasts = $('.toasts');
-  const modal = $('.modal');
-  const sheet = $('.sheet');
-  const tint = document.getElementById('tint')!;
-  const rain = document.getElementById('rain')!;
+/** Telas do jogo (loja, mochila, família...). Todas re-renderizam com o estado. */
+export function gameViews(ctx: UiContext) {
+  const hud = () => ctx.hud;
+  const header = (title: string) => html`<div class="row"><h2>${title}</h2><button class="btn ghost" data-act="close" aria-label="Fechar">✕</button></div>`;
 
-  let hud: HudState | null = null;
-  let renderModal: (() => string) | null = null;
-  let modalLocked = false;
-
-  // ---------------------------------------------------------------- estado
-  bus.on('hud', (h: HudState) => {
-    hud = h;
-    field('day').textContent = `Dia ${h.day}`;
-    field('season').textContent = h.seasonLabel;
-    field('time').textContent = h.clock;
-    field('weather').textContent = h.weather === 'chuva' ? ' 🌧️' : ' ☀️';
-    field('money').textContent = `R$ ${h.money}`;
-    field('partner').textContent = h.partnerName;
-    hotbar.innerHTML = h.slots.map((s, i) => `
-      <button class="slot ${s.key === h.selected ? 'on' : ''}" data-slot="${s.key}" title="${s.label} (${i + 1})">
-        <span class="icon">${s.icon}</span>${s.count !== undefined ? `<span class="count">${s.count}</span>` : ''}
-        ${s.key.startsWith('seed:') ? '<span class="seed">🌱</span>' : ''}
-      </button>`).join('');
-    if (renderModal) sheet.innerHTML = renderModal();
-  });
-
-  bus.on('ambient', (a: Ambient) => {
-    tint.style.background = `rgba(${a.color},${a.alpha})`;
-    rain.classList.toggle('on', a.rain);
-  });
-
-  bus.on('toast', (msg: string) => {
-    const el = document.createElement('div');
-    el.className = 'toast';
-    el.textContent = msg;
-    toasts.appendChild(el);
-    while (toasts.children.length > 3) toasts.firstElementChild?.remove();
-    setTimeout(() => el.classList.add('out'), 3200);
-    setTimeout(() => el.remove(), 3700);
-  });
-
-  bus.on('open', (which: 'sleep' | 'shop' | 'sell') => open(which));
-  bus.on('diary', (d: DiaryEntry) => openWith(() => `
-    <h2>📔 ${d.title}</h2>
-    <p class="author">— ${d.author}</p>
-    ${d.lines.map((l) => `<p>${l}</p>`).join('')}
-    <div class="row end"><button class="btn primary" data-act="close">Bom dia ☀️</button></div>`));
-
-  // ---------------------------------------------------------------- modais
-  function openWith(render: () => string, locked = false) {
-    renderModal = render;
-    modalLocked = locked;
-    sheet.innerHTML = render();
-    modal.classList.remove('hidden');
-    bus.emit('ui:modal', true);
-  }
-
-  function close() {
-    renderModal = null;
-    modal.classList.add('hidden');
-    bus.emit('ui:modal', false);
-  }
-
-  const header = (title: string) => `<div class="row"><h2>${title}</h2><button class="btn ghost" data-act="close">✕</button></div>`;
-
-  function open(which: string) {
-    if (!hud) return;
-    switch (which) {
-      case 'sleep':
-        return openWith(() => `${header('🌙 Dormir?')}
-          <p>Encerrar o dia e acordar amanhã cedo. As plantas regadas crescem durante a noite.</p>
-          <div class="row end"><button class="btn" data-act="close">Ainda não</button><button class="btn primary" data-act="do-sleep">Boa noite</button></div>`);
-      case 'shop':
-        return openWith(() => `${header('🚐 Kombi da feira')}
-          <p class="muted">Sementes da estação crescem no ritmo normal; fora de época, na metade.</p>
-          <ul class="list">${hud!.shop.map((s) => `
-            <li><span class="em">${s.emoji}</span>
-              <span class="grow"><b>${s.name}</b><small>${s.days} dias${s.regrow ? ` · rebrota a cada ${s.regrow}` : ''} · ${s.inSeason ? '✅ da estação' : '🐢 fora de época'}</small></span>
-              <span class="price">R$ ${s.price}</span>
-              <button class="btn" data-buy="${s.id}" data-qty="1">+1</button>
-              <button class="btn" data-buy="${s.id}" data-qty="5">+5</button>
-            </li>`).join('')}</ul>
-          <p class="muted">Você tem R$ ${hud!.money}</p>`);
-      case 'sell':
-      case 'bag': {
-        const selling = which === 'sell';
-        return openWith(() => `${header(selling ? '📦 Caixa de venda' : '🎒 Mochila')}
-          ${hud!.inventory.length ? `<ul class="list">${hud!.inventory.map((i) => `
-            <li><span class="em">${i.emoji}</span><span class="grow"><b>${i.name}</b><small>× ${i.count} · R$ ${i.sell} cada</small></span>
-            ${selling ? `<button class="btn" data-sell="${i.id}" data-qty="1">Vender 1</button><button class="btn" data-sell="${i.id}" data-qty="${i.count}">Todos</button>` : ''}
-            </li>`).join('')}</ul>` : '<p class="muted">Nada por aqui ainda. Bora colher, cortar lenha ou quebrar umas pedras!</p>'}
-          ${selling ? '' : '<p class="muted">Para vender, use a caixa de madeira ao lado de casa.</p>'}`);
+  const sleep: View = {
+    render: () => html`${header('🌙 Dormir?')}
+      <p>Encerrar o dia e acordar amanhã cedo. As plantas regadas crescem durante a noite.</p>
+      <div class="row end"><button class="btn" data-act="close">Ainda não</button><button class="btn primary" data-act="do-sleep">Boa noite</button></div>`,
+    action: (act) => {
+      if (act === 'do-sleep') {
+        ctx.modals.close();
+        ctx.bus.emit('ui:sleep');
       }
-      case 'family':
-        return openWith(() => `${header('🐾 Família')}
-          <ul class="list">
-            ${hud!.humans.map((h) => `<li><span class="em">🧑‍🌾</span><span class="grow"><b>${h.name}</b><small>${h.detail}</small></span></li>`).join('')}
-            ${hud!.pets.map((p) => `<li><span class="em">${p.id === 'nix' ? '🐈' : '🐕'}</span>
-              <span class="grow"><b>${p.name}</b><small>${p.breed}${p.pettedToday ? ' · já ganhou carinho hoje' : ''}</small></span>
-              <span class="hearts">${'❤️'.repeat(p.hearts)}${'🤍'.repeat(10 - p.hearts)}</span></li>`).join('')}
-          </ul>
-          <p class="muted">Toque num bichinho para fazer carinho. Um coração por dia.</p>`);
-      case 'settings':
-        return openWith(() => `${header('⚙️ Opções')}
-          <p><b>Controles</b><br/>Toque/clique: andar e agir · WASD/setas: andar · Espaço/E: agir · 1–9: ferramentas · Tab: trocar personagem.</p>
-          <p class="muted">O jogo salva sozinho ao dormir, a cada hora do jogo e quando você sai da página.</p>
-          <p class="muted">Arte provisória gerada por código. Créditos em CREDITS.md.</p>
-          <div class="row end"><button class="btn danger" data-act="reset">Recomeçar do zero</button></div>`);
-    }
-  }
+    },
+  };
 
-  // ---------------------------------------------------------------- cliques
-  root.addEventListener('click', (ev) => {
-    const el = (ev.target as HTMLElement).closest<HTMLElement>('[data-act],[data-slot],[data-buy],[data-sell]');
-    if (!el) {
-      if (ev.target === modal && !modalLocked) close();
-      return;
-    }
-    const d = el.dataset;
-    if (d.slot) return void bus.emit('ui:select', d.slot);
-    if (d.buy) return void bus.emit('ui:buy', d.buy, Number(d.qty));
-    if (d.sell) return void bus.emit('ui:sell', d.sell, Number(d.qty));
-    switch (d.act) {
-      case 'close': return close();
-      case 'switch': return bus.emit('ui:switch');
-      case 'do-sleep': close(); return bus.emit('ui:sleep');
-      case 'fullscreen': return toggleFullscreen();
-      case 'reset':
-        if (confirm('Apagar o save e recomeçar a vida no cerrado?')) bus.emit('ui:reset');
-        return;
-      default: return open(d.act ?? '');
-    }
+  const shop: View = {
+    live: true,
+    render: () => {
+      const h = hud();
+      if (!h) return html``;
+      return html`${header('🚐 Van da feira')}
+        <p class="muted">Sementes da estação crescem no ritmo normal; fora de época, na metade.</p>
+        <ul class="list">${h.shop.map((s) => html`
+          <li><span class="em">${s.emoji}</span>
+            <span class="grow"><b>${s.name}</b><small>${s.days} dias${s.regrow ? ` · rebrota a cada ${s.regrow}` : ''} · ${s.inSeason ? '✅ da estação' : '🐢 fora de época'}</small></span>
+            <span class="price">R$ ${s.price}</span>
+            <button class="btn" data-act="buy" data-id="${s.id}" data-qty="1">+1</button>
+            <button class="btn" data-act="buy" data-id="${s.id}" data-qty="5">+5</button>
+          </li>`)}</ul>
+        <p class="muted">Você tem R$ ${h.money}</p>`;
+    },
+    action: (act, el) => {
+      if (act === 'buy') ctx.bus.emit('ui:buy', el.dataset.id ?? '', Number(el.dataset.qty));
+    },
+  };
+
+  const inventory = (selling: boolean): View => ({
+    live: true,
+    render: () => {
+      const h = hud();
+      if (!h) return html``;
+      return html`${header(selling ? '📦 Caixa de venda' : '🎒 Mochila')}
+        ${h.inventory.length
+          ? html`<ul class="list">${h.inventory.map((i) => html`
+            <li><span class="em">${i.emoji}</span><span class="grow"><b>${i.name}</b><small>× ${i.count} · R$ ${i.sell} cada</small></span>
+            ${selling ? html`<button class="btn" data-act="sell" data-id="${i.id}" data-qty="1">Vender 1</button><button class="btn" data-act="sell" data-id="${i.id}" data-qty="${i.count}">Todos</button>` : ''}
+            </li>`)}</ul>`
+          : html`<p class="muted">Nada por aqui ainda. Bora colher, cortar lenha ou quebrar umas pedras!</p>`}
+        ${selling ? '' : html`<p class="muted">Para vender, use a caixa de madeira ao lado de casa.</p>`}`;
+    },
+    action: (act, el) => {
+      if (act === 'sell') ctx.bus.emit('ui:sell', el.dataset.id ?? '', Number(el.dataset.qty));
+    },
   });
 
-  window.addEventListener('keydown', (ev) => {
-    if (ev.code === 'Escape' && renderModal && !modalLocked) close();
-  });
+  const family: View = {
+    live: true,
+    render: () => {
+      const h = hud();
+      if (!h) return html``;
+      return html`${header('🐾 Família')}
+        <ul class="list">
+          ${h.humans.map((p) => html`<li><span class="em">🧑‍🌾</span><span class="grow"><b>${p.name}</b><small>${p.detail}</small></span></li>`)}
+          ${h.pets.map((p) => html`<li><span class="em">${p.id === 'nix' ? '🐈' : '🐕'}</span>
+            <span class="grow"><b>${p.name}</b><small>${p.breed}${p.pettedToday ? ' · já ganhou carinho hoje' : ''}</small></span>
+            <span class="hearts" aria-label="${p.hearts} de 10 corações">${'❤️'.repeat(p.hearts)}${'🤍'.repeat(10 - p.hearts)}</span></li>`)}
+        </ul>
+        <p class="muted">Toque num bichinho para fazer carinho. Um coração por dia.</p>`;
+    },
+  };
 
-  function toggleFullscreen() {
-    const doc = document as Document & { webkitFullscreenElement?: Element; webkitExitFullscreen?: () => void };
-    const el = document.documentElement as HTMLElement & { webkitRequestFullscreen?: () => void };
-    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
-      (doc.exitFullscreen?.bind(doc) ?? doc.webkitExitFullscreen?.bind(doc))?.();
-      return;
-    }
-    if (el.requestFullscreen) el.requestFullscreen({ navigationUI: 'hide' }).catch(iosHint);
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else iosHint();
-  }
+  const confirmNewGame: View = {
+    render: () => html`${header('Recomeçar do zero?')}
+      <p>Começa uma vida nova no cerrado neste aparelho. O progresso atual fica guardado como cópia de segurança.</p>
+      <div class="row end"><button class="btn" data-act="settings">Voltar</button><button class="btn danger" data-act="do-new-game">Recomeçar</button></div>`,
+    action: async (act) => {
+      if (act !== 'do-new-game') return;
+      await ctx.saves.startNewGame();
+      ctx.modals.close();
+    },
+  };
 
-  function iosHint() {
-    bus.emit('toast', 'No iPhone: toque em Compartilhar → “Adicionar à Tela de Início” para jogar em tela cheia.');
-  }
+  const settings: View = {
+    render: () => html`${header('⚙️ Opções')}
+      <p><b>Controles</b><br />Toque/clique: andar e agir · WASD/setas: andar · Espaço/E: agir · 1–9: ferramentas · Tab: trocar personagem.</p>
+      <p class="muted">O jogo salva sozinho ao dormir, a cada hora do jogo e quando você sai do app.</p>
+      <div class="stack">
+        <button class="btn" data-act="account">👤 Conta e privacidade</button>
+        <button class="btn" data-act="legal" data-page="privacidade">🔒 Política de Privacidade</button>
+        <button class="btn" data-act="legal" data-page="termos">📜 Termos de Uso</button>
+        <button class="btn" data-act="legal" data-page="licencas">🧩 Licenças de terceiros</button>
+      </div>
+      <p class="muted">Êxodo Urbano v${ctx.version}</p>
+      <div class="row end"><button class="btn danger" data-act="new-game">Recomeçar do zero</button></div>`,
+    action: (act) => {
+      if (act === 'new-game') ctx.modals.open(confirmNewGame);
+    },
+  };
+
+  const views: Record<GameModal | 'bag' | 'family' | 'settings', View> = {
+    sleep,
+    shop,
+    sell: inventory(true),
+    bag: inventory(false),
+    family,
+    settings,
+  };
+  return views;
+}
+
+export function diaryView(d: DiaryEntry): View {
+  return {
+    render: () => html`<h2>📔 ${d.title}</h2>
+      <p class="author">— ${d.author}</p>
+      ${d.lines.map((l) => html`<p>${l}</p>`)}
+      <div class="row end"><button class="btn primary" data-act="close">Bom dia ☀️</button></div>`,
+    action: () => undefined,
+  };
+}
+
+/** Atualiza a barra superior e a hotbar. */
+export function renderHud(root: HTMLElement, h: HudState) {
+  const field = (id: string) => root.querySelector<HTMLElement>(`[data-id="${id}"]`);
+  const set = (id: string, text: string) => {
+    const el = field(id);
+    if (el) el.textContent = text;
+  };
+  set('day', `Dia ${h.day}`);
+  set('season', h.seasonLabel);
+  set('time', h.clock);
+  set('weather', h.weather === 'chuva' ? ' 🌧️' : ' ☀️');
+  set('money', `R$ ${h.money}`);
+  set('partner', h.partnerName);
+  const hotbar = root.querySelector<HTMLElement>('.hotbar');
+  if (!hotbar) return;
+  hotbar.innerHTML = html`${h.slots.map((s, i) => html`
+    <button class="slot ${s.key === h.selected ? 'on' : ''}" data-act="slot" data-key="${s.key}" title="${s.label} (${i + 1})" aria-label="${s.label}">
+      <span class="icon">${s.icon}</span>${s.count !== undefined ? html`<span class="count">${s.count}</span>` : ''}
+      ${s.key.startsWith('seed:') ? html`<span class="seed">🌱</span>` : ''}
+    </button>`)}`.value;
 }

@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    # Espera a versão "amadurecer" antes de sugerir (pacotes comprometidos
+    # costumam ser descobertos e retirados em poucos dias).
+    cooldown:
+      default-days: 14
+    open-pull-requests-limit: 5
+    groups:
+      capacitor:
+        patterns: ['@capacitor/*', '@capacitor-firebase/*']
+      firebase:
+        patterns: ['firebase', '@firebase/*', 'firebase-tools']
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -2,3 +2,28 @@ node_modules/
 dist/
 *.log
 .DS_Store
+
+# Gerado no build (npm run licenses)
+public/licenses.txt
+
+# Variáveis locais: nunca versionar (.env.example e .env.emulator podem)
+.env
+.env.*.local
+.env.local
+
+# Credenciais e chaves: NUNCA no git (ver docs/SEGURANCA.md)
+google-services.json
+GoogleService-Info.plist
+*.jks
+*.keystore
+*.p12
+*.p8
+*.mobileprovision
+*service-account*.json
+keystore.properties
+
+# Firebase CLI e emuladores
+.firebase/
+.firebaserc
+*-debug.log
+firebase-export-*/

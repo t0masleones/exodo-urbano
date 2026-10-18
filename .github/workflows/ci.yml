@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: Tipos, testes, build e auditoria
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      # ignore-scripts vem do .npmrc: nenhum postinstall de terceiros roda no CI
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - name: Regras do Firestore (emulador)
+        run: npm run test:rules
+      - name: Build (inclui checagem de licenças)
+        run: npm run build
+      - name: Vulnerabilidades no que vai para o jogador
+        run: npm audit --omit=dev --audit-level=high

@@ -1,0 +1,68 @@
+rules_version = '2';
+
+// Regras do banco (Cloud Firestore). Princípios:
+//  1. Tudo negado por padrão; libera-se só o necessário.
+//  2. Cada jogador acessa apenas o próprio documento (/saves/{uid}).
+//  3. Formato, tipos e tamanho de tudo que é gravado são validados aqui,
+//     no servidor: o cliente pode ter sido adulterado.
+//  4. Escrita com intervalo mínimo e tamanho máximo, contra abuso e
+//     contra "denial of wallet" (ataque que tenta inflar a conta do projeto).
+//  5. Compras (futuro) só podem ser gravadas pelo servidor.
+// Testes: tests/rules/firestore.rules.test.ts (npm run test:rules)
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    // E-mail/senha precisa confirmar o e-mail; Google e Apple já vêm verificados.
+    function verified() {
+      return request.auth.token.email_verified == true
+        || request.auth.token.firebase.sign_in_provider in ['google.com', 'apple.com'];
+    }
+
+    function validSave(d) {
+      return d.keys().hasOnly(['schema', 'data', 'day', 'revision', 'saveId', 'appVersion', 'updatedAt'])
+        && d.keys().hasAll(['schema', 'data', 'day', 'revision', 'saveId', 'appVersion', 'updatedAt'])
+        && d.schema is int && d.schema >= 1 && d.schema <= 1000
+        && d.data is string && d.data.size() >= 2 && d.data.size() <= 262144
+        && d.day is int && d.day >= 1 && d.day <= 100000
+        && d.revision is int && d.revision >= 1 && d.revision <= 1000000000
+        && d.saveId is string && d.saveId.matches('^[A-Za-z0-9-]{8,64}$')
+        && d.appVersion is string && d.appVersion.size() <= 32
+        && d.updatedAt == request.time;
+    }
+
+    // Uma nova versão do mesmo jogo precisa ter revisão maior (nada de
+    // sobrescrever o progresso com uma cópia antiga) e respeitar 10 s entre envios.
+    function validUpdate(d, old) {
+      return request.time > old.updatedAt + duration.value(10, 's')
+        && (d.saveId != old.saveId || d.revision > old.revision);
+    }
+
+    match /saves/{uid} {
+      allow get: if isOwner(uid);
+      allow list: if false;
+      allow create: if isOwner(uid) && verified() && validSave(request.resource.data);
+      allow update: if isOwner(uid) && verified() && validSave(request.resource.data)
+        && validUpdate(request.resource.data, resource.data);
+      allow delete: if isOwner(uid);
+    }
+
+    // Futuro: itens comprados, validados no servidor (Cloud Functions + Admin SDK).
+    // O cliente só lê; nunca escreve. Ninguém consegue "se dar" um item pago.
+    match /entitlements/{uid} {
+      allow get: if isOwner(uid);
+      allow list, write: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
