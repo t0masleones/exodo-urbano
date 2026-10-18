@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Backup automático do Android (12+): leva só o progresso do jogo
+  (Capacitor Preferences) para o backup do próprio jogador no Google.
+  Dados do WebView (sessão de login) ficam de fora: ao trocar de aparelho,
+  a pessoa entra de novo na conta.
+-->
+<data-extraction-rules>
+    <cloud-backup>
+        <include domain="sharedpref" path="CapacitorStorage.xml" />
+    </cloud-backup>
+    <device-transfer>
+        <include domain="sharedpref" path="CapacitorStorage.xml" />
+    </device-transfer>
+</data-extraction-rules>
