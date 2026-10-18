@@ -12,13 +12,28 @@ const AUTH = 'http://127.0.0.1:9099';
 const FS_ROOT = 'http://127.0.0.1:8080/v1/projects/demo-exodo/databases/(default)/documents';
 const CHANNEL = process.env.E2E_BROWSER ?? (process.platform === 'win32' ? 'msedge' : 'chrome');
 
+const IN_CI = !!process.env.GITHUB_ACTIONS;
+
 mkdirSync(OUT, { recursive: true });
 const results = [];
+/** No GitHub Actions, falhas viram anotações legíveis na página da execução. */
+function annotate(title, message) {
+  if (!IN_CI) return;
+  const enc = (s) => String(s).replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+  console.log(`::error title=${enc(title).replace(/[:,]/g, ' ')}::${enc(message)}`);
+}
 const ok = (name, cond, extra = '') => {
   results.push({ name, pass: !!cond });
   console.log(cond ? '  ✔' : '  ✘', name, cond ? '' : extra);
+  if (!cond) annotate(`e2e: ${name}`, extra || 'verificação falhou');
 };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const openPages = [];
+let phase = 'início';
+const stage = (name) => {
+  phase = name;
+  console.log(name);
+};
 
 function watch(page, tag) {
   const issues = [];
@@ -29,6 +44,7 @@ function watch(page, tag) {
   });
   page.on('pageerror', (e) => issues.push(`pageerror: ${e.message}`));
   page.on('dialog', (d) => d.dismiss());
+  openPages.push(page);
   return Object.assign(page, { issues, tag });
 }
 
@@ -50,7 +66,7 @@ const PASSWORD = 'cerrado2026';
 
 async function run() {
   // 1. Convidado: joga offline, sem nenhuma requisição externa
-  console.log('Convidado');
+  stage('Convidado');
   const ctxA = await browser.newContext({ viewport: { width: 1280, height: 800 }, acceptDownloads: true });
   const a = watch(await ctxA.newPage(), 'desktop');
   const external = [];
@@ -64,26 +80,35 @@ async function run() {
   await a.click('text=Bom dia');
   ok('hotbar com ferramentas e sementes', (await a.locator('.hotbar .slot').count()) >= 8);
 
-  await a.keyboard.down('ArrowRight');
-  await sleep(700);
-  await a.keyboard.up('ArrowRight');
-  for (const key of ['Digit2', 'Digit6', 'Digit3']) {
-    await a.keyboard.press(key);
-    await a.keyboard.press('Space');
-    await sleep(150);
+  // Anda, ara, planta e rega. Espaço faz carinho se um pet estiver na frente
+  // (o Kuririn segue o jogador), então confere pelo HUD e tenta de novo.
+  const seeds = () => a.locator('.slot[data-key="seed:milho"] .count').innerText().then(Number);
+  let planted = false;
+  for (let attempt = 0; attempt < 5 && !planted; attempt++) {
+    await a.keyboard.down('ArrowRight');
+    await sleep(attempt === 0 ? 700 : 300);
+    await a.keyboard.up('ArrowRight');
+    for (const key of ['Digit2', 'Digit6', 'Digit3']) {
+      await a.keyboard.press(key);
+      await a.keyboard.press('Space');
+      await sleep(200);
+    }
+    planted = (await seeds()) < 6;
   }
+  ok('arar e plantar pelo teclado', planted);
   await a.click('[data-act="sleep"]');
   await a.click('text=Boa noite');
   await a.waitForSelector('.sheet >> text=Dia 2', { timeout: 10_000 });
   await a.screenshot({ path: `${OUT}/1-dia2.png` });
   await closeModal(a);
   const s1 = await save(a);
-  ok('save local: dia 2 com milho plantado', s1?.day === 2 && Object.values(s1.tiles).some((t) => t.crop?.id === 'milho'));
+  ok('save local: dia 2 com milho plantado', s1?.day === 2 && Object.values(s1.tiles).some((t) => t.crop?.id === 'milho'),
+    `dia=${s1?.day} tiles=${JSON.stringify(s1?.tiles)}`);
   ok('convidado não faz requisições externas', external.length === 0, external.slice(0, 3).join(' '));
   ok('convidado nem baixa o código do Firebase', !(await a.evaluate(() => performance.getEntriesByType('resource').some((r) => /firebase-/.test(r.name)))));
 
   // 2. Opções: classificação, bem-estar e páginas legais
-  console.log('Opções e documentos');
+  stage('Opções e documentos');
   await a.click('[data-act="settings"]');
   const settings = await sheetText(a);
   ok('classificação indicativa Livre visível', settings.includes('Classificação indicativa: Livre'));
@@ -99,11 +124,11 @@ async function run() {
   ok('política de privacidade com controlador e contato', policy.includes('Tomás Antonio Albuquerque Souza Leones') && policy.includes('tomasleones@proton.me'));
   await a.click('[data-act="legal-back"]');
   await a.click('.sheet [data-page="licencas"]');
-  ok('licenças de terceiros abrem', (await a.frameLocator('iframe.legal').locator('body').innerText()).includes('phaser@'));
+  ok('licenças de terceiros abrem', await a.frameLocator('iframe.legal').locator('text=phaser@').first().waitFor({ timeout: 10_000 }).then(() => true, () => false));
   await closeModal(a);
 
   // 3. Conta por e-mail: idade, cadastro, confirmação, nuvem
-  console.log('Conta e nuvem');
+  stage('Conta e nuvem');
   await a.click('[data-act="account"]');
   await a.click('[data-act="acc:signup"]');
   ok('pergunta neutra de idade antes do cadastro', (await sheetText(a)).includes('Em que ano você nasceu?'));
@@ -132,7 +157,7 @@ async function run() {
   await closeModal(a);
 
   // 4. Segundo aparelho (celular): restaura da nuvem
-  console.log('Segundo aparelho');
+  stage('Segundo aparelho');
   const ctxB = await browser.newContext({ viewport: { width: 393, height: 851 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 });
   const b = watch(await ctxB.newPage(), 'celular');
   await b.goto(APP);
@@ -152,7 +177,7 @@ async function run() {
   await b.screenshot({ path: `${OUT}/3-celular.png` });
 
   // 5. Os dois aparelhos jogam: conflito, e o jogador escolhe
-  console.log('Conflito');
+  stage('Conflito');
   await b.tap('[data-act="sleep"]');
   await b.tap('text=Boa noite');
   await sleep(2200);
@@ -175,7 +200,7 @@ async function run() {
     `local=${adopted?.meta.revision} nuvem=${cloud.revision.integerValue}`);
 
   // 6. Exclusão de conta (LGPD)
-  console.log('Exclusão');
+  stage('Exclusão');
   await a.click('[data-act="account"]');
   await a.click('[data-act="acc:delete"]');
   await a.fill('input[name=confirm]', 'excluir');
@@ -193,18 +218,25 @@ async function run() {
 
 // ---------------------------------------------------------------------------
 
-const server = await preview({ preview: { port: PORT, strictPort: true, host: '127.0.0.1' }, logLevel: 'warn' });
-const browser = await chromium.launch({ channel: CHANNEL, headless: true });
+// Build próprio do teste (não colide com o dist/ de produção) e conferido antes de começar
+if (!readFileSync('dist-e2e/index.html', 'utf8').includes('127.0.0.1:9099')) throw new Error('dist-e2e não é um build do modo emulator');
+const server = await preview({ build: { outDir: 'dist-e2e' }, preview: { port: PORT, strictPort: true, host: '127.0.0.1' }, logLevel: 'warn' });
+let browser;
 
 try {
+  // Sem GPU no CI: WebGL por software, para testar o mesmo renderizador dos jogadores.
+  const args = IN_CI ? ['--enable-unsafe-swiftshader', '--use-angle=swiftshader'] : [];
+  browser = await chromium.launch({ channel: CHANNEL, headless: true, args });
   await fetch(`${AUTH}/emulator/v1/projects/demo-exodo/accounts`, { method: 'DELETE' });
   await fetch('http://127.0.0.1:8080/emulator/v1/projects/demo-exodo/databases/(default)/documents', { method: 'DELETE' });
   await run();
 } catch (err) {
   console.error(err);
   results.push({ name: 'execução sem exceções', pass: false });
+  annotate(`e2e: exceção na etapa "${phase}"`, String(err?.stack ?? err).split('\n').slice(0, 8).join('\n'));
+  for (const p of openPages) await p.screenshot({ path: `${OUT}/falha-${p.tag}.png` }).catch(() => undefined);
 } finally {
-  await browser.close();
+  await browser?.close();
   await server.close();
 }
 

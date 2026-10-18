@@ -28,3 +28,4 @@ keystore.properties
 .firebaserc
 *-debug.log
 firebase-export-*/
+dist-e2e/
