@@ -1,3 +1,4 @@
+import type { Ambience } from '../audio/Ambience';
 import type { Bus } from '../app/events';
 import { canToggleFullscreen, onBackButton } from '../platform';
 import type { Account } from '../services/account/Account';
@@ -9,6 +10,7 @@ import { html, setHtml } from './dom';
 import { diaryView, gameViews, renderHud } from './hud';
 import { Modals, type View } from './modal';
 import { breakView } from './wellbeing';
+import { icon } from './icons';
 import './hud.css';
 
 const LEGAL: Record<LegalPage, { title: string; src: string }> = {
@@ -24,6 +26,7 @@ interface UiDeps {
   account: Account;
   saves: SaveManager;
   wellbeing: PlaytimeGuard;
+  audio: Ambience;
   version: string;
 }
 
@@ -35,18 +38,18 @@ export function initUi(root: HTMLElement, deps: UiDeps) {
   setHtml(root, html`
     <div class="top">
       <div class="panel clock" aria-live="off">
-        <span data-id="day"></span><span class="sep">·</span><span data-id="season"></span>
-        <span class="sep">·</span><span data-id="time"></span><span data-id="weather"></span>
+        <span data-id="day"></span><span class="sep">·</span><span class="i" data-id="season-icon"></span><span data-id="season"></span>
+        <span class="sep">·</span><span data-id="time"></span><span class="i" data-id="weather" role="img"></span>
       </div>
       <div class="panel money" data-id="money"></div>
       <div class="buttons">
-        <button class="btn" data-act="switch" title="Trocar personagem (Tab)">🔄 <span data-id="partner"></span></button>
-        <button class="btn" data-act="bag" title="Mochila" aria-label="Mochila">🎒</button>
-        <button class="btn" data-act="family" title="Família" aria-label="Família">🐾</button>
-        <button class="btn" data-act="account" title="Conta" aria-label="Conta">👤</button>
-        <button class="btn" data-act="sleep" title="Dormir" aria-label="Dormir">🌙</button>
-        ${canToggleFullscreen ? html`<button class="btn" data-act="fullscreen" title="Tela cheia" aria-label="Tela cheia">⛶</button>` : ''}
-        <button class="btn" data-act="settings" title="Opções" aria-label="Opções">⚙️</button>
+        <button class="btn" data-act="switch" title="Trocar personagem (Tab)">${icon('ui:trocar')} <span data-id="partner"></span></button>
+        <button class="btn" data-act="bag" title="Mochila" aria-label="Mochila">${icon('ui:mochila')}</button>
+        <button class="btn" data-act="family" title="Família" aria-label="Família">${icon('ui:pata')}</button>
+        <button class="btn" data-act="account" title="Conta" aria-label="Conta">${icon('ui:conta')}</button>
+        <button class="btn" data-act="sleep" title="Dormir" aria-label="Dormir">${icon('ui:lua')}</button>
+        ${canToggleFullscreen ? html`<button class="btn" data-act="fullscreen" title="Tela cheia" aria-label="Tela cheia">${icon('ui:telacheia')}</button>` : ''}
+        <button class="btn" data-act="settings" title="Opções" aria-label="Opções">${icon('ui:engrenagem')}</button>
       </div>
     </div>
     <div class="toasts" role="status" aria-live="polite"></div>

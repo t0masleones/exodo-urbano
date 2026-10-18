@@ -1,3 +1,4 @@
+import type { Ambience } from '../audio/Ambience';
 import type { Bus } from '../app/events';
 import type { Account } from '../services/account/Account';
 import type { SaveManager } from '../services/save/SaveManager';
@@ -13,6 +14,7 @@ export interface UiContext {
   account: Account;
   saves: SaveManager;
   wellbeing: PlaytimeGuard;
+  audio: Ambience;
   modals: Modals;
   version: string;
   /** Último estado do jogo recebido (null antes da primeira atualização). */

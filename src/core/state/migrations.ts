@@ -18,6 +18,12 @@ const MIGRATIONS: Record<number, (s: Json) => Json> = {
       meta: { id: newSaveId(), revision: 1, syncedRevision: 0, createdAt: now, updatedAt: now, playtimeSec: 600, appVersion: 'legado' },
     };
   },
+  // v2 → v3: pomar e fogão a lenha (contagem diária de pratos).
+  2: (s) => ({
+    ...s,
+    version: 3,
+    stats: isObj(s.stats) ? { ...s.stats, pratos: 0 } : s.stats,
+  }),
 };
 
 /** Leva qualquer save conhecido até a versão atual. null = formato desconhecido. */

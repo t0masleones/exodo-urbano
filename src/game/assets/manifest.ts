@@ -1,4 +1,5 @@
 import { CROPS } from '../../core/data/crops';
+import { TREES } from '../../core/data/trees';
 import type { HumanId, PetId } from '../../core/data/characters';
 import { ANIMAL_LAYOUT, PLACEHOLDER_HUMAN, type AnimalLayout, type HumanLayout } from './layouts';
 
@@ -51,6 +52,9 @@ export const STATIC_ART: StaticArt[] = [
   { key: 'pedra' },
   { key: 'cupinzeiro' },
   { key: 'pequi' },
+  { key: 'fogao' },
   // Cada cultura: 5 frames 32×32 (semente, broto, crescendo, florindo, maduro).
   ...CROPS.map((c) => ({ key: `crop-${c.id}`, frameWidth: 32, frameHeight: 32 })),
+  // Árvores frutíferas: 3 frames 48×64 (muda, adulta, com frutos).
+  ...TREES.map((t) => ({ key: `tree-${t.id}`, frameWidth: 48, frameHeight: 64 })),
 ];

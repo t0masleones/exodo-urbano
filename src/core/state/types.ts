@@ -1,7 +1,7 @@
 import type { HumanId, PetId } from '../data/characters';
 
 /** Versão do formato do save. Mudou o formato? Incremente e escreva a migração em migrations.ts. */
-export const SAVE_SCHEMA = 2;
+export const SAVE_SCHEMA = 3;
 
 export interface CropState {
   id: string;
@@ -15,7 +15,7 @@ export interface TileState {
   crop?: CropState;
 }
 
-export const OBJECT_KINDS = ['eucalipto', 'pequizeiro', 'toco', 'pedra', 'cupinzeiro', 'pequi'] as const;
+export const OBJECT_KINDS = ['eucalipto', 'pequizeiro', 'toco', 'pedra', 'cupinzeiro', 'pequi', 'frutifera'] as const;
 export type ObjectKind = (typeof OBJECT_KINDS)[number];
 
 export interface WorldObject {
@@ -24,6 +24,14 @@ export interface WorldObject {
   x: number;
   y: number;
   hp: number;
+  /** Só para kind "frutifera": qual árvore, dias desde o plantio e se há frutos. */
+  tree?: TreeState;
+}
+
+export interface TreeState {
+  id: string;
+  days: number;
+  ready: boolean;
 }
 
 export interface DayStats {
@@ -31,6 +39,7 @@ export interface DayStats {
   plantios: number;
   madeira: number;
   pedras: number;
+  pratos: number;
   carinhos: PetId[];
 }
 
@@ -66,4 +75,4 @@ export interface GameState {
   stats: DayStats;
 }
 
-export const emptyStats = (): DayStats => ({ colheitas: 0, plantios: 0, madeira: 0, pedras: 0, carinhos: [] });
+export const emptyStats = (): DayStats => ({ colheitas: 0, plantios: 0, madeira: 0, pedras: 0, pratos: 0, carinhos: [] });

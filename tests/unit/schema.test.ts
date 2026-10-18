@@ -17,10 +17,19 @@ describe('validação de saves', () => {
   it('migra o save do protótipo (v1) para o formato atual', () => {
     const s = fresh();
     delete s.meta;
+    delete s.stats.pratos;
     s.version = 1;
     const parsed = parseSave(s);
-    expect(parsed?.version).toBe(2);
+    expect(parsed?.version).toBe(3);
     expect(parsed?.meta.revision).toBe(1);
+    expect(parsed?.stats.pratos).toBe(0);
+  });
+
+  it('migra v2 (antes do pomar e da cozinha) para v3', () => {
+    const s = fresh();
+    delete s.stats.pratos;
+    s.version = 2;
+    expect(parseSave(s)?.stats.pratos).toBe(0);
   });
 
   it.each([
@@ -40,6 +49,11 @@ describe('validação de saves', () => {
     ['id de save com caracteres estranhos', (s: any) => (s.meta.id = '<script>alert(1)</script>')],
     ['revisão sincronizada maior que a atual', (s: any) => (s.meta.syncedRevision = s.meta.revision + 1)],
     ['versão desconhecida', (s: any) => (s.version = 99)],
+    ['árvore inventada', (s: any) => s.objects.push({ id: 9999, kind: 'frutifera', x: 1, y: 1, hp: 999, tree: { id: 'jabuticaba-magica', days: 1, ready: false } })],
+    ['árvore sem dados', (s: any) => s.objects.push({ id: 9999, kind: 'frutifera', x: 1, y: 1, hp: 999 })],
+    ['dados de árvore em objeto comum', (s: any) => (s.objects[0].tree = { id: 'manga', days: 1, ready: true })],
+    ['prato inventado', (s: any) => (s.inventory['prato:bolo-de-ouro'] = 1)],
+    ['muda inventada', (s: any) => (s.inventory['muda:constructor'] = 1)],
   ])('recusa: %s', (_, tamper) => {
     const s = fresh();
     tamper(s);

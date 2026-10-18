@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { TILE } from '../../core/config';
 import { CROPS, type CropDef } from '../../core/data/crops';
 import { HUMANS, PETS, type AnimalLook, type BodyPart, type PersonLook } from '../../core/data/characters';
+import { TREES, type TreeDef } from '../../core/data/trees';
 import { mulberry32 } from '../../core/util/random';
 import { HUMAN_ART, PET_ART } from './manifest';
 import { ANIMAL_LAYOUT, PLACEHOLDER_HUMAN, type Dir4 } from './layouts';
@@ -56,6 +57,7 @@ export function generatePlaceholders(scene: Phaser.Scene) {
     if (missing(art.key)) drawAnimalSheet(scene, art.key, def.look, def.id.length * 977);
   }
   for (const crop of CROPS) if (missing(`crop-${crop.id}`)) drawCropSheet(scene, crop);
+  for (const tree of TREES) if (missing(`tree-${tree.id}`)) drawTreeSheet(scene, tree);
 
   const statics: [string, number, number, (c: Ctx) => void][] = [
     ['casa', 128, 112, drawHouse],
@@ -67,6 +69,7 @@ export function generatePlaceholders(scene: Phaser.Scene) {
     ['pedra', 32, 32, drawRock],
     ['cupinzeiro', 32, 48, drawTermiteMound],
     ['pequi', 16, 16, drawPequi],
+    ['fogao', 32, 48, drawFogao],
   ];
   for (const [key, w, h, draw] of statics) {
     if (!missing(key)) continue;
@@ -486,4 +489,66 @@ function drawPequi(c: Ctx) {
   ellipse(c, 8, 13, 5, 1.5, 'rgba(0,0,0,0.25)');
   ellipse(c, 8, 9, 5, 4.5, '#9aa82e');
   ellipse(c, 7, 8, 2, 1.5, '#c8d04a');
+}
+
+// ---------------------------------------------------------------- pomar e cozinha
+
+/** Árvore frutífera: 3 frames de 48×64 (muda, adulta, com frutos). */
+function drawTreeSheet(scene: Phaser.Scene, tree: TreeDef) {
+  const t = canvas(scene, `tree-${tree.id}`, 48 * 3, 64);
+  const c = t.context;
+  const r = mulberry32(tree.id.length * 131);
+  for (let stage = 0; stage < 3; stage++) {
+    const ox = stage * 48;
+    ellipse(c, ox + 24, 61, stage === 0 ? 7 : 16, 2.5, 'rgba(0,0,0,0.22)');
+    if (stage === 0) {
+      c.fillStyle = '#6b4a2e';
+      c.fillRect(ox + 23, 46, 2, 14);
+      ellipse(c, ox + 20, 46, 5, 3, tree.leaf);
+      ellipse(c, ox + 28, 43, 5, 3, shade(tree.leaf, 0.15));
+      ellipse(c, ox + 24, 40, 4, 3, tree.leaf);
+      t.add(stage, 0, ox, 0, 48, 64);
+      continue;
+    }
+    if (tree.id === 'banana' || tree.id === 'mamao') {
+      // tronco reto e folhas largas no topo
+      c.fillStyle = tree.id === 'banana' ? '#8a9a4a' : '#9a8a6a';
+      c.fillRect(ox + 22, 24, 5, 37);
+      for (const [dx, dy, w] of [[-14, 18, 14], [8, 16, 14], [-10, 10, 12], [4, 8, 12], [-4, 4, 10]]) {
+        ellipse(c, ox + 24 + dx + w / 2, dy + 6, w, 5, shade(tree.leaf, r() * 0.2 - 0.1));
+      }
+    } else {
+      c.fillStyle = '#5a4030';
+      c.fillRect(ox + 22, 34, 5, 27);
+      c.fillRect(ox + 18, 38, 4, 3);
+      ellipse(c, ox + 24, 26, 20, 17, shade(tree.leaf, -0.15));
+      ellipse(c, ox + 18, 22, 11, 9, tree.leaf);
+      ellipse(c, ox + 31, 25, 10, 8, shade(tree.leaf, 0.1));
+      ellipse(c, ox + 24, 15, 9, 6, shade(tree.leaf, 0.2));
+    }
+    if (stage === 2) {
+      const spots = tree.id === 'banana' ? [[24, 26], [27, 28], [21, 28]] : tree.id === 'mamao' ? [[21, 26], [27, 26], [24, 30]] : [[14, 24], [32, 20], [24, 30], [19, 14], [35, 30], [28, 13]];
+      for (const [x, y] of spots) {
+        if (tree.id === 'banana') { c.fillStyle = tree.fruit; c.fillRect(ox + x - 1, y, 3, 7); }
+        else ellipse(c, ox + x, y, tree.id === 'acerola' ? 2 : 3, tree.id === 'acerola' ? 2 : 3.5, tree.fruit);
+      }
+    }
+    t.add(stage, 0, ox, 0, 48, 64);
+  }
+  t.refresh();
+}
+
+/** Fogão a lenha de tijolo, com chaminé e brasa acesa. */
+function drawFogao(c: Ctx) {
+  const p = pxAt(c, 0, 0);
+  ellipse(c, 16, 45, 13, 3, 'rgba(0,0,0,0.25)');
+  p(1, 10, 14, 12, '#b0623a');
+  for (let y = 11; y < 22; y += 2) p(1, y, 14, 1, '#9a5230');
+  p(1, 9, 14, 2, '#5a5a58');
+  p(11, 0, 3, 9, '#8a5a3a');
+  p(11, 0, 3, 1, '#5a3a2a');
+  p(3, 14, 6, 5, '#2b1d14');
+  p(4, 16, 4, 3, '#e07a26');
+  p(5, 17, 2, 2, '#f8e08a');
+  p(3, 10, 4, 1, '#3a3a38');
 }

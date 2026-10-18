@@ -30,6 +30,7 @@ export function buildDiary(state: GameState, report: DayReport): DiaryEntry {
   if (p.plantios) feitos.push(`plantamos ${p.plantios} mudas`);
   if (p.madeira) feitos.push(`juntamos ${p.madeira} de madeira`);
   if (p.pedras) feitos.push(`tiramos ${p.pedras} de pedra e argila do caminho`);
+  if (p.pratos) feitos.push(`cozinhamos ${p.pratos} prato(s) no fogão a lenha`);
   if (feitos.length) lines.push(`Ontem ${feitos.join(', ')}.`);
   if (p.carinhos.length) lines.push(`Teve carinho pra ${p.carinhos.map((id) => PETS[id].name).join(', ')}.`);
 

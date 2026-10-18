@@ -47,3 +47,7 @@ Briefing dos bichos:
 - **Nix**: gata SRD escaminha (preto com manchas laranja e creme), vive no telhado.
 
 Se o layout for diferente, basta criar um novo `HumanLayout`/`AnimalLayout` descrevendo a grade; o resto do código não muda.
+
+## Ícones da interface
+
+Os ícones do HUD (ferramentas, itens, sementes, mudas, pratos, botões) são **pixel art própria** em `src/ui/icons.ts`: grades de 12×12 renderizadas como SVG nítido. Culturas, frutas e pratos usam moldes coloridos a partir das cores definidas nos dados, então item novo ganha ícone automaticamente. Para redesenhar, edite a grade (uma letra por pixel) ou entregue ao artista as mesmas medidas (12×12, paleta limitada).
