@@ -18,6 +18,7 @@ h2 { font-size: 19px; margin: 28px 0 8px; border-top: 1px solid var(--line); pad
 .resumo { background: #eef5e6; border: 2px solid #b9d5a0; border-radius: 10px; padding: 12px 16px; }
 .classificacao { display: flex; align-items: center; gap: 10px; margin: 4px 0 8px; }
 .selo-l {
+  flex: none;
   display: inline-grid;
   place-items: center;
   width: 36px;
