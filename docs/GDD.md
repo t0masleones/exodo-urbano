@@ -7,6 +7,7 @@ Carol (30, 1,55 m, parda, tatuagens old school) e Tomás (30, 1,80 m, branco, ca
 1. **Sem punição.** Não há fome, energia, perigo nem prazo. Planta não regada pausa o crescimento, mas nunca morre. Passar da meia-noite só faz o casal dormir no sofá.
 2. **Autenticidade do cerrado.** Duas estações reais (chuvas e seca), terra vermelha, pequizeiro protegido, cupinzeiros, seriema, van da feira.
 3. **Família como coração.** Os pets têm personalidade e o casal conversa entre si. O diário fecha cada dia.
+4. **Livre para todos e saudável.** Classificação indicativa Livre (ver [CLASSIFICACAO.md](CLASSIFICACAO.md)). Sem violência, álcool, cigarro ou sustos, inclusive em receitas e tatuagens. Sem contato entre jogadores. O jogo nunca puxa a pessoa de volta: sem prêmio diário, sequência ou notificação. Ele sugere pausas a cada 1 h de jogo, ajustável.
 
 ## Loop (um dia ≈ 12 min reais, das 6h à 0h)
 Acordar → diário → regar/colher → cortar eucalipto / quebrar pedra e cupinzeiro → vender na caixa → comprar sementes na van da feira → carinho nos bichos → dormir.

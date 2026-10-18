@@ -70,7 +70,8 @@ export class FarmScene extends Phaser.Scene {
     this.objSprites.clear();
     this.cropSprites.clear();
     this.pets = [];
-    this.lastHudTick = -1;
+    // começa no "tick" atual: autosave só quando o tempo de jogo realmente avança
+    this.lastHudTick = Math.floor(this.state.minutes / 10);
     this.sleeping = false;
 
     const map = this.make.tilemap({ tileWidth: TILE, tileHeight: TILE, width: MAP_W, height: MAP_H });
@@ -123,6 +124,7 @@ export class FarmScene extends Phaser.Scene {
     if (active) {
       this.state.minutes += (dt / 1000) * GAME_MINUTES_PER_SECOND;
       this.state.meta.playtimeSec += dt / 1000;
+      this.ctx.wellbeing.tick(dt / 1000);
       if (this.state.minutes >= DAY_END) this.sleep(true);
     }
 

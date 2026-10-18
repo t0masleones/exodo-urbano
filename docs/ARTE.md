@@ -6,6 +6,8 @@ Depois de trocar, abra o jogo com `#galeria` na URL para conferir as animações
 
 > **Atenção, versão de loja:** a arte final precisa ser **sua** (feita por você ou encomendada com contrato de cessão). As artes LPC são CC-BY-SA/GPL: qualquer derivado também teria de ser liberado sob essa licença, o que conflita com um jogo proprietário nas lojas. Use LPC só para prototipar ou como referência, e não na versão publicada. Detalhes em [LICENCIAMENTO.md](LICENCIAMENTO.md).
 
+> **Classificação Livre:** nas tatuagens *old school* da Carol, use só motivos neutros (andorinha, rosa, âncora, coração, ferradura). Nada de *pin-ups* sensuais. Também não desenhe bebidas alcoólicas ou cigarros em cenários e itens. Ver [CLASSIFICACAO.md](CLASSIFICACAO.md).
+
 ## 1. Personagens com LPC (só protótipo)
 
 1. Abra o [Universal LPC Spritesheet Character Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/).

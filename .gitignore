@@ -3,8 +3,9 @@ dist/
 *.log
 .DS_Store
 
-# Gerado no build (npm run licenses)
+# Gerado no build (npm run licenses) e nos testes
 public/licenses.txt
+test-results/
 
 # Variáveis locais: nunca versionar (.env.example e .env.emulator podem)
 .env

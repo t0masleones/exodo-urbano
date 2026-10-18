@@ -4,7 +4,7 @@
   "version": "0.2.0",
   "description": "Êxodo Urbano: cozy game 2D no cerrado (web, Android e iOS)",
   "license": "UNLICENSED",
-  "author": "t0masleones",
+  "author": "Tomás Antonio Albuquerque Souza Leones <tomasleones@proton.me>",
   "type": "module",
   "engines": {
     "node": ">=22.12"
@@ -19,6 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:rules": "firebase emulators:exec --only firestore --project demo-exodo \"vitest run --config vitest.rules.config.ts\"",
+    "test:e2e": "npm run build:emu && firebase emulators:exec --only auth,firestore --project demo-exodo \"node tests/e2e/run.mjs\"",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-exodo",
     "licenses": "node scripts/third-party-licenses.mjs",
     "release:check": "node scripts/release-check.mjs",
@@ -43,6 +44,7 @@
     "@firebase/rules-unit-testing": "5.0.2",
     "@types/node": "24.19.1",
     "firebase-tools": "15.32.1",
+    "playwright-core": "1.63.0",
     "typescript": "7.0.2",
     "vite": "8.3.2",
     "vitest": "5.0.3"

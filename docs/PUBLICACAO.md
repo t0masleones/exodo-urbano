@@ -32,7 +32,8 @@ Tudo isso dá para fazer no plano gratuito (Spark). Só migre para o Blaze quand
 - Gere o **AAB** assinado com a *upload key* e use **Play App Signing**. Suba `versionCode` e `versionName` a cada versão.
 
 **Ficha na loja**
-- Política de Privacidade (URL), **URL de exclusão de conta** (`legal/exclusao-de-conta.html`), formulário *Data safety*, classificação indicativa (IARC), público-alvo 13+ e declaração de que não há anúncios.
+- Política de Privacidade (URL), **URL de exclusão de conta** (`legal/exclusao-de-conta.html`), formulário *Data safety*, público-alvo e declaração de que não há anúncios.
+- **Classificação indicativa (questionário IARC):** respostas sugeridas e resultado esperado (**Livre**) em [CLASSIFICACAO.md](CLASSIFICACAO.md). Responda pelo que existe no build enviado.
 - Ícone de 512 px, gráfico de destaque de 1024×500 e prints sem marcas de terceiros.
 
 ## 3. App Store (iOS)
@@ -53,7 +54,8 @@ npm run build
 npm run release:check   # bloqueia: [PREENCHER], segredos no git, CSP ausente, live reload
 ```
 
-- [ ] Campos `[PREENCHER]` resolvidos (LICENSE e páginas legais) e revisão jurídica feita
+- [x] Campos `[PREENCHER]` resolvidos (LICENSE e páginas legais) e revisão pelo Guia de Classificação Indicativa
+- [ ] Autoavaliação de classificação refeita se o build tiver recursos novos (compras, interação entre jogadores)
 - [ ] Regras do Firestore publicadas, App Check imposto, alertas de orçamento criados
 - [ ] Testado em celular Android real (login Google, sincronização, exclusão de conta, modo imersivo)
 - [ ] Teste fechado com 12+ testadores por 14 dias (conta pessoal)

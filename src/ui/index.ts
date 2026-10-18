@@ -2,25 +2,36 @@ import type { Bus } from '../app/events';
 import { canToggleFullscreen, onBackButton } from '../platform';
 import type { Account } from '../services/account/Account';
 import type { SaveManager } from '../services/save/SaveManager';
+import type { PlaytimeGuard } from '../services/wellbeing/PlaytimeGuard';
 import { AccountView, conflictView } from './account';
 import type { LegalPage, UiContext } from './context';
 import { html, setHtml } from './dom';
 import { diaryView, gameViews, renderHud } from './hud';
 import { Modals, type View } from './modal';
+import { breakView } from './wellbeing';
 import './hud.css';
 
 const LEGAL: Record<LegalPage, { title: string; src: string }> = {
   privacidade: { title: 'Política de Privacidade', src: 'legal/privacidade.html' },
   termos: { title: 'Termos de Uso', src: 'legal/termos.html' },
   exclusao: { title: 'Exclusão de conta e dados', src: 'legal/exclusao-de-conta.html' },
+  responsaveis: { title: 'Para pais e responsáveis', src: 'legal/responsaveis.html' },
   licencas: { title: 'Licenças de terceiros', src: 'licenses.txt' },
 };
+
+interface UiDeps {
+  bus: Bus;
+  account: Account;
+  saves: SaveManager;
+  wellbeing: PlaytimeGuard;
+  version: string;
+}
 
 /**
  * Interface em HTML/CSS por cima do canvas: nítida em qualquer tela, acessível
  * a leitores de tela e fácil de trocar os emojis por ícones próprios depois.
  */
-export function initUi(root: HTMLElement, deps: { bus: Bus; account: Account; saves: SaveManager; version: string }) {
+export function initUi(root: HTMLElement, deps: UiDeps) {
   setHtml(root, html`
     <div class="top">
       <div class="panel clock" aria-live="off">
@@ -49,7 +60,16 @@ export function initUi(root: HTMLElement, deps: { bus: Bus; account: Account; sa
   const toasts = root.querySelector<HTMLElement>('.toasts')!;
   const tint = document.getElementById('tint');
   const rain = document.getElementById('rain');
-  const modals = new Modals(overlay, sheet, (open) => bus.emit('ui:modal', open));
+  // Lembrete de pausa que chegou com outra tela aberta: aparece quando ela fechar.
+  let pendingBreak: number | null = null;
+  const modals = new Modals(overlay, sheet, (open) => {
+    bus.emit('ui:modal', open);
+    if (!open && pendingBreak !== null) {
+      const minutes = pendingBreak;
+      pendingBreak = null;
+      queueMicrotask(() => modals.open(breakView(ctx, minutes)));
+    }
+  });
 
   const toast = (msg: string) => {
     const el = document.createElement('div');
@@ -93,6 +113,10 @@ export function initUi(root: HTMLElement, deps: { bus: Bus; account: Account; sa
   bus.on('toast', toast);
   bus.on('open', (which) => modals.open(views[which]));
   bus.on('diary', (d) => modals.open(diaryView(d)));
+  bus.on('wellbeing:break', (minutes) => {
+    if (modals.current) pendingBreak = minutes;
+    else modals.open(breakView(ctx, minutes));
+  });
   bus.on('account', (snap) => {
     if (snap.sync.state === 'conflict' && modals.current !== conflict) {
       conflict = conflictView(ctx);

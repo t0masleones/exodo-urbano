@@ -62,7 +62,7 @@ O código e a arte provisória foram gerados com ajuda de IA a partir das suas d
 
 ## Checklist
 
-- [ ] Nome completo no `LICENSE` e nas páginas legais
+- [x] Nome completo no `LICENSE` e nas páginas legais
 - [ ] Busca de anterioridade e depósito da marca no INPI (classes 9 e 41)
 - [ ] Registro do software no INPI (opcional, recomendado antes de lançar)
 - [ ] Autorização de uso de imagem da Carol

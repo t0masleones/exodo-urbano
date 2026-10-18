@@ -30,6 +30,8 @@ export type AppEvents = {
   // saves e contas
   'save:replaced': [];
   account: [AccountSnapshot];
+  // bem-estar (ECA Digital): hora de sugerir uma pausa; argumento = minutos jogados hoje
+  'wellbeing:break': [number];
 };
 
 export type Bus = Emitter<AppEvents>;

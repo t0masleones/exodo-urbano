@@ -7,6 +7,7 @@
 3. **Nada aleatório pago.** Sem loot box, gacha ou "caixa surpresa". Além de ética, é **proibido** pelo ECA Digital (Lei nº 15.211/2025, art. 20) para jogos com acesso provável de crianças e adolescentes.
 4. **Sem anúncios.** Eles quebram o clima cozy, exigem SDKs de rastreamento e complicam LGPD, ECA Digital e a política para famílias da Play.
 5. **Preço claro e conteúdo conhecido antes de comprar.** Sem moeda premium intermediária.
+6. **Classificação indicativa:** pelo Guia do MJSP (5ª ed.), compras on-line sem verificação de idade ou autorização dos responsáveis são referência de **14 anos**. Qualquer loja deve exigir aprovação do responsável (controles parentais das lojas) para manter o jogo **Livre**. Reavalie com [CLASSIFICACAO.md](CLASSIFICACAO.md) antes de lançar.
 
 ## Ideias, da mais simples para a mais trabalhosa
 

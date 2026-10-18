@@ -39,3 +39,32 @@ jobs:
         run: npm run build
       - name: Vulnerabilidades no que vai para o jogador
         run: npm audit --omit=dev --audit-level=high
+
+  ponta-a-ponta:
+    name: Ponta a ponta (navegador + emuladores)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+      - run: npm ci
+      # Usa o Google Chrome que já vem instalado no runner (nada é baixado)
+      - run: npm run test:e2e
+        env:
+          E2E_BROWSER: chrome
+      - name: Capturas de tela
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-capturas
+          path: test-results/e2e/
+          retention-days: 7

@@ -1,5 +1,8 @@
 # Êxodo Urbano
 
+[![CI](https://github.com/t0masleones/exodo-urbano/actions/workflows/ci.yml/badge.svg)](https://github.com/t0masleones/exodo-urbano/actions/workflows/ci.yml)
+![Classificação indicativa: Livre](https://img.shields.io/badge/classifica%C3%A7%C3%A3o-Livre-00a651)
+
 Cozy game 2D para **navegador, Android e iOS**. Carol e Tomás largaram o mercado corporativo e foram viver numa pequena fazenda no cerrado com Ravena, Chihiro, Kuririn e Nix. Sem fome, sem perigo, sem punição: horta, lenha, pedra, bichos e pôr do sol.
 
 > **About (EN):** a cozy farming game set in the Brazilian *cerrado*, built as an authorial portfolio project. One TypeScript codebase (Phaser 4 + Capacitor 8) ships to web, Android and iOS. It works fully offline. Optional accounts (Google, Apple or e-mail) back up progress to Firebase through a privacy-first, local-first sync, with server-side security rules covered by tests. All rights reserved.
@@ -16,7 +19,11 @@ Cozy game 2D para **navegador, Android e iOS**. Carol e Tomás largaram o mercad
   - App Check;
   - validação defensiva de saves;
   - dependências com versões exatas, verificadas e com licenças auditadas.
-- **Testes:** unidade (regras, saves, sync, segurança), regras do banco no emulador e ponta a ponta no navegador (cadastro, nuvem, segundo aparelho, conflito, exportação, exclusão).
+- **Livre para todos e saudável:** autoclassificação **Livre** pelo Guia de Classificação Indicativa do MJSP (5ª ed.). Sem chat, compras, anúncios ou loot boxes. Lembrete de pausa ligado por padrão, como pede o ECA Digital.
+- **Testes, todos no CI:**
+  - unidade: regras, saves, sync, segurança, bem-estar;
+  - regras do banco no emulador;
+  - ponta a ponta no navegador: convidado sem rede, cadastro, nuvem, segundo aparelho, conflito, exportação, exclusão, CSP.
 
 ## Rodar
 
@@ -33,6 +40,7 @@ Contas online em desenvolvimento, sem conta no Google, rodando tudo localmente:
 npm run emulators     # Auth + Firestore locais (precisa de Java 21)
 npm run dev:emu       # jogo apontando para os emuladores
 npm run test:rules    # testes das regras do Firestore
+npm run test:e2e      # ponta a ponta: build + emuladores + navegador (Edge no Windows, Chrome no resto)
 ```
 
 Android e iOS: `npm run android` / `npm run ios`. Veja [docs/PUBLICACAO.md](docs/PUBLICACAO.md).
@@ -60,9 +68,9 @@ src/
   platform/   diferenças web × Android × iOS (Capacitor)
   app/        ambiente e eventos tipados
 firebase/     regras do Firestore
-tests/        unidade (Node) e regras (emulador)
+tests/        unidade (Node), regras (emulador) e ponta a ponta (navegador)
 android/ ios/ projetos nativos (Capacitor)
-public/legal/ política de privacidade, termos, exclusão de conta
+public/legal/ privacidade, termos, exclusão de conta, página para responsáveis
 ```
 
 ## Documentação
@@ -72,6 +80,7 @@ public/legal/ política de privacidade, termos, exclusão de conta
 | [Arquitetura](docs/ARQUITETURA.md) | Camadas, fluxo do save, decisões |
 | [Segurança](docs/SEGURANCA.md) | Ameaças × controles, pendências, incidentes |
 | [LGPD](docs/LGPD.md) | Inventário de dados, direitos, crianças, ECA Digital |
+| [Classificação indicativa](docs/CLASSIFICACAO.md) | Autoavaliação pelo Guia do MJSP, IARC, uso excessivo |
 | [Licenciamento](docs/LICENCIAMENTO.md) | Autoria, marca, INPI, terceiros, IA, cuidados com outras marcas |
 | [Publicação](docs/PUBLICACAO.md) | Firebase, Google Play, App Store, checklist |
 | [Monetização](docs/MONETIZACAO.md) | Backlog sem pay-to-win e sem loot box |

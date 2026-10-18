@@ -4,6 +4,7 @@ import { html } from './dom';
 import type { HudState } from './hudState';
 import type { View } from './modal';
 import type { UiContext } from './context';
+import { wellbeingSettings } from './wellbeing';
 
 /** Telas do jogo (loja, mochila, família...). Todas re-renderizam com o estado. */
 export function gameViews(ctx: UiContext) {
@@ -93,16 +94,25 @@ export function gameViews(ctx: UiContext) {
     render: () => html`${header('⚙️ Opções')}
       <p><b>Controles</b><br />Toque/clique: andar e agir · WASD/setas: andar · Espaço/E: agir · 1–9: ferramentas · Tab: trocar personagem.</p>
       <p class="muted">O jogo salva sozinho ao dormir, a cada hora do jogo e quando você sai do app.</p>
+      ${wellbeingSettings(ctx)}
+      <h3>Informações</h3>
+      <p class="rating"><span class="rating-badge" aria-hidden="true">L</span>
+        <span>Classificação indicativa: <b>Livre</b> <span class="small">(autoclassificação)</span></span></p>
       <div class="stack">
         <button class="btn" data-act="account">👤 Conta e privacidade</button>
+        <button class="btn" data-act="legal" data-page="responsaveis">👨‍👩‍👧 Para pais e responsáveis</button>
         <button class="btn" data-act="legal" data-page="privacidade">🔒 Política de Privacidade</button>
         <button class="btn" data-act="legal" data-page="termos">📜 Termos de Uso</button>
         <button class="btn" data-act="legal" data-page="licencas">🧩 Licenças de terceiros</button>
       </div>
       <p class="muted">Êxodo Urbano v${ctx.version}</p>
       <div class="row end"><button class="btn danger" data-act="new-game">Recomeçar do zero</button></div>`,
-    action: (act) => {
+    action: async (act, el) => {
       if (act === 'new-game') ctx.modals.open(confirmNewGame);
+      if (act === 'break:interval') {
+        await ctx.wellbeing.setInterval(Number(el.dataset.min));
+        ctx.modals.render();
+      }
     },
   };
 
@@ -123,7 +133,6 @@ export function diaryView(d: DiaryEntry): View {
       <p class="author">— ${d.author}</p>
       ${d.lines.map((l) => html`<p>${l}</p>`)}
       <div class="row end"><button class="btn primary" data-act="close">Bom dia ☀️</button></div>`,
-    action: () => undefined,
   };
 }
 

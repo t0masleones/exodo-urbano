@@ -2,12 +2,14 @@ import type Phaser from 'phaser';
 import type { Bus } from '../app/events';
 import type { BaseMap } from '../core/world/mapgen';
 import type { SaveManager } from '../services/save/SaveManager';
+import type { PlaytimeGuard } from '../services/wellbeing/PlaytimeGuard';
 
 /** O que as cenas recebem do app (injeção de dependência via registry do Phaser). */
 export interface GameContext {
   bus: Bus;
   saves: SaveManager;
   base: BaseMap;
+  wellbeing: PlaytimeGuard;
 }
 
 const KEY = 'ctx';
