@@ -5,11 +5,11 @@ Carol (30, 1,55 m, parda, tatuagens old school) e Tomás (30, 1,80 m, branco, ca
 
 ## Pilares
 1. **Sem punição.** Não há fome, energia, perigo nem prazo. Planta não regada pausa o crescimento, mas nunca morre. Passar da meia-noite só faz o casal dormir no sofá.
-2. **Autenticidade do cerrado.** Duas estações reais (chuvas e seca), terra vermelha, pequizeiro protegido, cupinzeiros, seriema, Kombi da feira.
+2. **Autenticidade do cerrado.** Duas estações reais (chuvas e seca), terra vermelha, pequizeiro protegido, cupinzeiros, seriema, van da feira.
 3. **Família como coração.** Os pets têm personalidade e o casal conversa entre si. O diário fecha cada dia.
 
 ## Loop (um dia ≈ 12 min reais, das 6h à 0h)
-Acordar → diário → regar/colher → cortar eucalipto / quebrar pedra e cupinzeiro → vender na caixa → comprar sementes na Kombi → carinho nos bichos → dormir.
+Acordar → diário → regar/colher → cortar eucalipto / quebrar pedra e cupinzeiro → vender na caixa → comprar sementes na van da feira → carinho nos bichos → dormir.
 
 ## Estações (28 dias cada)
 | | Chuvas (começa em outubro, dia 1) | Seca |
@@ -23,7 +23,7 @@ Acordar → diário → regar/colher → cortar eucalipto / quebrar pedra e cupi
 Fora de época, a planta cresce na metade da velocidade.
 
 ## Cultivo
-Terra → **arar** (enxada) → **plantar** → **regar** → semente → broto → crescendo → florindo → maduro → **colher** (com qualquer ferramenta). Culturas com `regrowDays` voltam para a fase de crescimento após a colheita. Tudo é configurado em `src/data/crops.ts`.
+Terra → **arar** (enxada) → **plantar** → **regar** → semente → broto → crescendo → florindo → maduro → **colher** (com qualquer ferramenta). Culturas com `regrowDays` voltam para a fase de crescimento após a colheita. Tudo é configurado em `src/core/data/crops.ts`.
 
 ## Recursos
 - **Eucalipto**: 4 golpes de machado dão 3 de madeira e deixam um toco, que dá mais 1.

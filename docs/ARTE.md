@@ -1,10 +1,12 @@
 # Arte: como trocar placeholders por arte de verdade
 
-Todo sprite passa por [`src/assets/manifest.ts`](../src/assets/manifest.ts). Uma entrada sem `url` usa o placeholder desenhado por código ([`placeholders.ts`](../src/assets/placeholders.ts)). Uma entrada com `url` carrega um PNG de `public/`. Nenhum outro arquivo precisa mudar.
+Todo sprite passa por [`src/game/assets/manifest.ts`](../src/game/assets/manifest.ts). Uma entrada sem `url` usa o placeholder desenhado por código ([`placeholders.ts`](../src/game/assets/placeholders.ts)). Uma entrada com `url` carrega um PNG de `public/`. Nenhum outro arquivo precisa mudar.
 
 Depois de trocar, abra o jogo com `#galeria` na URL para conferir as animações.
 
-## 1. Personagens com LPC (grátis)
+> **Atenção, versão de loja:** a arte final precisa ser **sua** (feita por você ou encomendada com contrato de cessão). As artes LPC são CC-BY-SA/GPL: qualquer derivado também teria de ser liberado sob essa licença, o que conflita com um jogo proprietário nas lojas. Use LPC só para prototipar ou como referência, e não na versão publicada. Detalhes em [LICENCIAMENTO.md](LICENCIAMENTO.md).
+
+## 1. Personagens com LPC (só protótipo)
 
 1. Abra o [Universal LPC Spritesheet Character Generator](https://liberatedpixelcup.github.io/Universal-LPC-Spritesheet-Character-Generator/).
 2. Monte cada personagem:
@@ -24,7 +26,7 @@ Depois de trocar, abra o jogo com `#galeria` na URL para conferir as animações
 
 ## 2. Encomendar arte (quando fizer sentido)
 
-Mande para o artista o contrato de [`layouts.ts`](../src/assets/layouts.ts):
+Mande para o artista o contrato de [`layouts.ts`](../src/game/assets/layouts.ts):
 
 | Asset | Frame | Grade | Linhas |
 |---|---|---|---|
@@ -32,7 +34,7 @@ Mande para o artista o contrato de [`layouts.ts`](../src/assets/layouts.ts):
 | Pets | 32×24 | 4 colunas × 6 linhas | andar→, parado→, dormindo→, andar←, parado←, dormindo← |
 | Culturas | 32×32 | 5 colunas | semente, broto, crescendo, florindo, maduro |
 | Tileset | 32×32 | 9 tiles numa linha | ordem de `TILE_INDEX` no manifesto |
-| Objetos | livre | 1 imagem | casa 128×112, kombi 64×48, eucalipto 32×80, pequizeiro 64×64... |
+| Objetos | livre | 1 imagem | casa 128×112, van 64×48, eucalipto 32×80, pequizeiro 64×64... |
 
 Os pets têm esquerda e direita desenhadas separadamente porque o **Kuririn é pirata de um lado só**: a mancha preta aparece só de um lado do rosto.
 
