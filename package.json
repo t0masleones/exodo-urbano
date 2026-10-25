@@ -42,7 +42,7 @@
   "devDependencies": {
     "@capacitor/cli": "8.5.2",
     "@firebase/rules-unit-testing": "5.0.2",
-    "@types/node": "26.6.4",
+    "@types/node": "26.6.5",
     "firebase-tools": "15.32.1",
     "playwright-core": "1.63.0",
     "typescript": "7.0.2",
