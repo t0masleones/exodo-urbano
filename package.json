@@ -29,18 +29,18 @@
   },
   "dependencies": {
     "@capacitor-firebase/authentication": "8.5.2",
-    "@capacitor/android": "8.5.2",
+    "@capacitor/android": "8.5.3",
     "@capacitor/app": "8.1.2",
-    "@capacitor/core": "8.5.2",
+    "@capacitor/core": "8.5.3",
     "@capacitor/filesystem": "8.1.4",
-    "@capacitor/ios": "8.5.2",
+    "@capacitor/ios": "8.5.3",
     "@capacitor/preferences": "8.0.1",
     "@capacitor/share": "8.0.3",
     "firebase": "12.19.0",
     "phaser": "4.2.1"
   },
   "devDependencies": {
-    "@capacitor/cli": "8.5.2",
+    "@capacitor/cli": "8.5.3",
     "@firebase/rules-unit-testing": "5.0.2",
     "@types/node": "26.6.4",
     "firebase-tools": "15.32.1",
